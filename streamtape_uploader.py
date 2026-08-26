@@ -13,8 +13,8 @@ import subprocess
 from pathlib import Path
 
 # ================= HARDCODED CREDENTIALS =================
+STREAMTAPE_LOGIN = "59484016637a23331603"
 STREAMTAPE_KEY = "lgWOyYK90XC7xLd"
-STREAMTAPE_LOGIN = "d010fe6b2a096c46ee09"  # Default fallback login; can be overridden via --login or STREAMTAPE_LOGIN env var
 API_BASE = "https://api.streamtape.com"
 # =========================================================
 

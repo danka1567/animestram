@@ -7,10 +7,6 @@ on:
         description: 'Direct Media URL or Stream URL (M3U8 / HLS, MP4, MKV, AVI, etc.)'
         required: true
         type: string
-      api_login:
-        description: 'Streamtape API Login (leave empty if using GitHub Secret or script default)'
-        required: false
-        type: string
       custom_filename:
         description: 'Custom File Name (optional, e.g. video.mp4)'
         required: false
@@ -49,14 +45,10 @@ jobs:
 
       - name: High-Speed Download & Local Upload to Streamtape API
         env:
+          STREAMTAPE_LOGIN: "59484016637a23331603"
           STREAMTAPE_KEY: "lgWOyYK90XC7xLd"
-          STREAMTAPE_LOGIN: ${{ inputs.api_login || secrets.STREAMTAPE_LOGIN }}
         run: |
           ARGS=("--url" "${{ inputs.media_url }}")
-          
-          if [ -n "${{ inputs.api_login }}" ]; then
-            ARGS+=("--login" "${{ inputs.api_login }}")
-          fi
 
           if [ -n "${{ inputs.custom_filename }}" ]; then
             ARGS+=("--name" "${{ inputs.custom_filename }}")
