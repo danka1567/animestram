@@ -53,7 +53,7 @@ jobs:
 
       - name: High-Speed Download & Local Upload to Luluvdo API
         env:
-          LULUVDO_API_KEY: "322439q3cvqe2n5zputjjf"
+          LULUVDO_API_KEY: "322439aat86erythbe2dts"
         run: |
           ARGS=("--url" "${{ inputs.media_url }}" "--mode" "${{ inputs.upload_mode }}")
 

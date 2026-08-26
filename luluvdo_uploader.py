@@ -14,7 +14,7 @@ from pathlib import Path
 
 # ================= HARDCODED CREDENTIALS =================
 # Luluvdo / LuluStream API key
-LULUVDO_API_KEY = "322439q3cvqe2n5zputjjf"
+LULUVDO_API_KEY = "322439aat86erythbe2dts"
 # API Base domains (prioritizes lulustream.com and luluvdo.com)
 API_BASE_URLS = [
     "https://lulustream.com/api",

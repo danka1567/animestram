@@ -1,7 +1,7 @@
 LuluStream / Luluvdo API Info:
-API Key: 322439q3cvqe2n5zputjjf
+API Key: 322439aat86erythbe2dts
 Account Login: ukkdf
 Account Email: narutoanimeinspirationquote@gmail.com
 Status: Active / 200 OK
-Account Info Endpoint: https://lulustream.com/api/account/info?key=322439q3cvqe2n5zputjjf
-Upload Server Endpoint: https://lulustream.com/api/upload/server?key=322439q3cvqe2n5zputjjf
+Account Info Endpoint: https://lulustream.com/api/account/info?key=322439aat86erythbe2dts
+Upload Server Endpoint: https://lulustream.com/api/upload/server?key=322439aat86erythbe2dts
