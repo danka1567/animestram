@@ -1,0 +1,72 @@
+name: Download & Local Upload to Luluvdo
+
+on:
+  workflow_dispatch:
+    inputs:
+      media_url:
+        description: 'Direct Media URL or Stream URL (M3U8 / HLS, MP4, MKV, AVI, etc.)'
+        required: true
+        type: string
+      upload_mode:
+        description: 'Upload Mode (local = download to runner & upload | remote = API remote upload)'
+        required: true
+        default: 'local'
+        type: choice
+        options:
+          - local
+          - remote
+      custom_filename:
+        description: 'Custom File Name (optional, e.g. video.mp4)'
+        required: false
+        type: string
+      folder_id:
+        description: 'Luluvdo Target Folder ID (optional)'
+        required: false
+        type: string
+      user_agent:
+        description: 'Custom User-Agent / Headers (optional, e.g. for protected HLS streams)'
+        required: false
+        type: string
+
+jobs:
+  download-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System Dependencies (Aria2 multi-threading, FFmpeg)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq aria2 ffmpeg curl jq
+
+      - name: Install Python & CLI Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests yt-dlp
+
+      - name: High-Speed Download & Local Upload to Luluvdo API
+        env:
+          LULUVDO_API_KEY: "lgWOyYK90XC7xLd"
+        run: |
+          ARGS=("--url" "${{ inputs.media_url }}" "--mode" "${{ inputs.upload_mode }}")
+
+          if [ -n "${{ inputs.custom_filename }}" ]; then
+            ARGS+=("--name" "${{ inputs.custom_filename }}")
+          fi
+          
+          if [ -n "${{ inputs.folder_id }}" ]; then
+            ARGS+=("--folder" "${{ inputs.folder_id }}")
+          fi
+
+          if [ -n "${{ inputs.user_agent }}" ]; then
+            ARGS+=("--user-agent" "${{ inputs.user_agent }}")
+          fi
+
+          python luluvdo_uploader.py "${ARGS[@]}"
