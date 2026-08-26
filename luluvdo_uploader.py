@@ -13,12 +13,12 @@ import subprocess
 from pathlib import Path
 
 # ================= HARDCODED CREDENTIALS =================
-# Replace with your Luluvdo / LuluStream API key
-LULUVDO_API_KEY = "lgWOyYK90XC7xLd"
-# API Base domains (supports both luluvdo.com and lulustream.com)
+# Luluvdo / LuluStream API key
+LULUVDO_API_KEY = "322439q3cvqe2n5zputjjf"
+# API Base domains (prioritizes lulustream.com and luluvdo.com)
 API_BASE_URLS = [
-    "https://luluvdo.com/api",
-    "https://lulustream.com/api"
+    "https://lulustream.com/api",
+    "https://luluvdo.com/api"
 ]
 # =========================================================
 
