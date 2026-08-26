@@ -104,11 +104,14 @@ def high_speed_download(media_url: str, output_dir: str, custom_name: str = None
     return downloaded_file
 
 
-def get_upload_server_url(api_key: str) -> tuple[str, dict]:
+def get_upload_server_url(api_key: str, custom_server: str = None) -> tuple[str, dict]:
     """
-    Fetches the upload server endpoint from Luluvdo / LuluStream API.
+    Fetches the dynamic upload server endpoint from Luluvdo / LuluStream API.
     Returns (upload_url, extra_params)
     """
+    if custom_server:
+        return custom_server, {}
+
     for base in API_BASE_URLS:
         try:
             endpoint = f"{base}/upload/server"
@@ -129,7 +132,7 @@ def get_upload_server_url(api_key: str) -> tuple[str, dict]:
             continue
 
     # Fallback to direct upload endpoint
-    return f"https://luluvdo.com/api/upload/server", {}
+    return f"https://lulustream.com/api/upload/server", {}
 
 
 class ProgressFileReader:
@@ -159,7 +162,7 @@ class ProgressFileReader:
         self._file.close()
 
 
-def upload_to_luluvdo(api_key: str, file_path: Path, folder_id: str = None):
+def upload_to_luluvdo(api_key: str, file_path: Path, folder_id: str = None, upload_server: str = None):
     """
     Performs local file multipart upload to Luluvdo / LuluStream API.
     """
@@ -167,7 +170,7 @@ def upload_to_luluvdo(api_key: str, file_path: Path, folder_id: str = None):
     print("📤 [2/2] STARTING LOCAL FILE UPLOAD TO LULUVDO")
     print("=" * 70)
 
-    upload_endpoint, extra_params = get_upload_server_url(api_key)
+    upload_endpoint, extra_params = get_upload_server_url(api_key, custom_server=upload_server)
     print(f"Target Upload Endpoint: {upload_endpoint}")
     print(f"Target File: {file_path.name} ({format_size(file_path.stat().st_size)})")
 
@@ -242,6 +245,7 @@ def main():
     parser.add_argument("--mode", "-m", choices=["local", "remote"], default="local", help="Upload mode (default: local)")
     parser.add_argument("--key", "-k", default=os.getenv("LULUVDO_API_KEY", LULUVDO_API_KEY), help="Luluvdo API Key")
     parser.add_argument("--folder", "-f", default=None, help="Luluvdo Target Folder ID (optional)")
+    parser.add_argument("--server", "-s", default=None, help="Custom upload server URL (optional, e.g. https://s1.myvideo.com/upload/01)")
     parser.add_argument("--name", "-n", default=None, help="Custom filename (e.g. video.mp4)")
     parser.add_argument("--user-agent", default=None, help="Custom User-Agent header (optional)")
     parser.add_argument("--outdir", default="./downloads", help="Local download directory")
@@ -263,7 +267,8 @@ def main():
         upload_to_luluvdo(
             api_key=args.key,
             file_path=downloaded_file,
-            folder_id=args.folder
+            folder_id=args.folder,
+            upload_server=args.server
         )
 
 

@@ -23,6 +23,10 @@ on:
         description: 'Luluvdo Target Folder ID (optional)'
         required: false
         type: string
+      upload_server:
+        description: 'Custom Upload Server URL (optional, e.g. from /api/upload/server)'
+        required: false
+        type: string
       user_agent:
         description: 'Custom User-Agent / Headers (optional, e.g. for protected HLS streams)'
         required: false
@@ -63,6 +67,10 @@ jobs:
           
           if [ -n "${{ inputs.folder_id }}" ]; then
             ARGS+=("--folder" "${{ inputs.folder_id }}")
+          fi
+
+          if [ -n "${{ inputs.upload_server }}" ]; then
+            ARGS+=("--server" "${{ inputs.upload_server }}")
           fi
 
           if [ -n "${{ inputs.user_agent }}" ]; then
