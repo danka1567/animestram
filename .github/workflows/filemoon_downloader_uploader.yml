@@ -1,0 +1,109 @@
+name: Download & Local Upload to FileMoon
+
+on:
+  workflow_dispatch:
+    inputs:
+      media_url:
+        description: 'Direct Media URL or Stream URL (M3U8 / HLS, MP4, MKV, AVI, etc.)'
+        required: true
+        default: 'https://raw.githubusercontent.com/mediaelement/mediaelement-files/master/big_buck_bunny.mp4'
+        type: string
+      upload_mode:
+        description: 'Upload Mode (local = download to runner & upload | remote = API remote upload)'
+        required: true
+        default: 'local'
+        type: choice
+        options:
+          - local
+          - remote
+      custom_filename:
+        description: 'Custom File Name (optional, e.g. video.mp4)'
+        required: false
+        type: string
+      description:
+        description: 'File Description (optional)'
+        required: false
+        type: string
+      folder_id:
+        description: 'FileMoon Target Folder ID (optional integer)'
+        required: false
+        type: string
+      visibility:
+        description: 'Visibility (1 = public, 0 = private)'
+        required: false
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '0'
+      allow_watch:
+        description: 'Allow Online Video Playback (1 = true, 0 = false)'
+        required: false
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '0'
+      user_agent:
+        description: 'Custom User-Agent / Headers (optional, e.g. for protected HLS streams)'
+        required: false
+        type: string
+
+jobs:
+  download-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System Dependencies (Aria2 multi-threading, FFmpeg)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq aria2 ffmpeg curl jq
+
+      - name: Install Python & CLI Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests yt-dlp
+
+      - name: High-Speed Download & Upload to FileMoon API
+        env:
+          FILEMOON_API_KEY: "71|LtVJvuDc9cj9e6VDKd40XBbh1FQYfEJ22JbqCPtc"
+        run: |
+          ARGS=("--url" "${{ inputs.media_url }}" "--mode" "${{ inputs.upload_mode }}")
+
+          if [ -n "${{ inputs.custom_filename }}" ]; then
+            ARGS+=("--name" "${{ inputs.custom_filename }}")
+          fi
+
+          if [ -n "${{ inputs.description }}" ]; then
+            ARGS+=("--descr" "${{ inputs.description }}")
+          fi
+          
+          if [ -n "${{ inputs.folder_id }}" ]; then
+            ARGS+=("--folder" "${{ inputs.folder_id }}")
+          fi
+
+          if [ -n "${{ inputs.visibility }}" ]; then
+            ARGS+=("--visibility" "${{ inputs.visibility }}")
+          fi
+
+          if [ -n "${{ inputs.allow_watch }}" ]; then
+            ARGS+=("--allow-watch" "${{ inputs.allow_watch }}")
+          fi
+
+          if [ -n "${{ inputs.user_agent }}" ]; then
+            ARGS+=("--user-agent" "${{ inputs.user_agent }}")
+          fi
+
+          if [ -f "filemoon_uploader.py" ]; then
+            python filemoon_uploader.py "${ARGS[@]}"
+          else
+            python filemoon/filemoon_uploader.py "${ARGS[@]}"
+          fi

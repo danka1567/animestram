@@ -1,26 +1,70 @@
-# Luluvdo / LuluStream Media Downloader & Local Uploader (GitHub Action)
+# Video Upload & Download APIs (GitHub Actions & CLI)
 
-This workflow runs on GitHub Actions to download any media format (`.m3u8` / HLS, `.mp4`, `.mkv`, `.avi`, web streams) at **maximum speeds** using multi-connection engines (`yt-dlp` + `aria2c` with 16 parallel threads), and uploads it directly to Luluvdo / LuluStream via the API.
-
----
-
-## 🚀 Features
-
-- **Maximum Download Speed**: Multi-threaded downloader using `yt-dlp` & `aria2c` (16 parallel connections & 16 concurrent fragments for HLS/M3U8).
-- **Hardcoded API Credentials**: Preconfigured with your Luluvdo API key.
-- **Default Mode**: **Local file upload** (`local`) — Downloads the media to the runner disk and POSTs via multipart form data (`file_0=@...`) to the active upload server endpoint.
-- **Alternative Mode**: **Remote upload** (`remote`) — Sends the remote download URL directly to Luluvdo API via `/api/upload/url`.
+Multi-threaded media downloaders and uploaders for **Luluvdo / LuluStream** and **EarnVids** powered by `yt-dlp`, `aria2c` (16 parallel threads), and GitHub Actions.
 
 ---
 
-## 🎯 How to Run the Workflow
+## 📁 Platforms & Directory Structure
 
-1. Go to the **Actions** tab in this GitHub repository.
-2. Select **Download & Local Upload to Luluvdo** on the left sidebar.
-3. Click **Run workflow** and fill in:
-   - **`media_url`** *(required)*: The direct media link or `.m3u8` stream.
-   - **`upload_mode`** *(default: `local`)*: Choose `local` (default) or `remote`.
-   - **`custom_filename`** *(optional)*: E.g., `video.mp4`.
-   - **`folder_id`** *(optional)*: Target folder ID.
-   - **`user_agent`** *(optional)*: Custom User-Agent header if required by protected streams.
-4. Click **Run workflow**.
+```
+.
+├── .github/
+│   └── workflows/
+│       ├── luluvdo_downloader_uploader.yml       # Luluvdo GitHub Action
+│       └── earnvids_downloader_uploader.yml       # EarnVids GitHub Action
+├── earnvids/
+│   ├── .github/workflows/
+│   │   └── earnvids_downloader_uploader.yml
+│   ├── earnvids_uploader.py                      # Multi-fragment downloader & uploader
+│   ├── earnvidsapiinfo.txt                       # EarnVids API documentation
+│   ├── README.md                                 # Standalone repo docs
+│   └── requirements.txt
+├── luluvodo/
+│   ├── .github/workflows/
+│   │   └── luluvdo_downloader_uploader.yml
+│   ├── luluvdo_uploader.py                       # Multi-fragment downloader & uploader
+│   ├── luluvdooapiinfo.txt                       # Luluvdo API documentation
+│   ├── README.md                                 # Standalone repo docs
+│   └── requirements.txt
+├── README.md
+└── requirements.txt
+```
+
+---
+
+## 🚀 Running via GitHub Actions
+
+### 1. EarnVids Uploader
+1. Go to the **Actions** tab in this GitHub repository (or [`danka1567/earnvids`](https://github.com/danka1567/earnvids)).
+2. Select **Download & Local Upload to EarnVids**.
+3. Click **Run workflow** and enter your `media_url` and desired metadata.
+
+### 2. Luluvdo Uploader
+1. Go to the **Actions** tab.
+2. Select **Download & Local Upload to Luluvdo**.
+3. Click **Run workflow** and enter your `media_url`.
+
+---
+
+## 💻 Running Locally (CLI)
+
+### EarnVids
+```bash
+cd earnvids
+pip install -r requirements.txt
+
+# Check account info
+python earnvids_uploader.py --mode account
+
+# High speed download and upload
+python earnvids_uploader.py --url "<STREAM_OR_VIDEO_URL>" --title "My Video"
+```
+
+### Luluvdo
+```bash
+cd luluvodo
+pip install -r requirements.txt
+
+# High speed download and upload
+python luluvdo_uploader.py --url "<STREAM_OR_VIDEO_URL>"
+```
