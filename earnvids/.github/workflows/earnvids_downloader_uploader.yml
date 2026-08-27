@@ -1,0 +1,136 @@
+name: Download & Local Upload to EarnVids
+
+on:
+  workflow_dispatch:
+    inputs:
+      media_url:
+        description: 'Direct Media URL or Stream URL (M3U8 / HLS, MP4, MKV, AVI, etc.)'
+        required: true
+        default: 'https://raw.githubusercontent.com/mediaelement/mediaelement-files/master/big_buck_bunny.mp4'
+        type: string
+      upload_mode:
+        description: 'Upload Mode (local = download to runner & upload | remote = API remote upload)'
+        required: true
+        default: 'local'
+        type: choice
+        options:
+          - local
+          - remote
+      custom_filename:
+        description: 'Custom File Name (optional, e.g. video.mp4)'
+        required: false
+        type: string
+      file_title:
+        description: 'Video Title (optional)'
+        required: false
+        type: string
+      file_descr:
+        description: 'Video Description (optional)'
+        required: false
+        type: string
+      folder_id:
+        description: 'EarnVids Target Folder ID (optional, e.g. 25)'
+        required: false
+        type: string
+      category_id:
+        description: 'Category ID (optional, e.g. 5)'
+        required: false
+        type: string
+      tags:
+        description: 'Tags list (comma separated, optional)'
+        required: false
+        type: string
+      is_public:
+        description: 'Public Video flag (1 = public, 0 = private)'
+        required: true
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '0'
+      is_adult:
+        description: 'Adult Video flag (1 = adult, 0 = safe)'
+        required: true
+        default: '0'
+        type: choice
+        options:
+          - '0'
+          - '1'
+      upload_server:
+        description: 'Custom Upload Server URL (optional, e.g. https://s1.myvideo.com/upload/01)'
+        required: false
+        type: string
+      user_agent:
+        description: 'Custom User-Agent / Headers (optional, e.g. for protected HLS streams)'
+        required: false
+        type: string
+
+jobs:
+  download-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System Dependencies (Aria2 multi-threading, FFmpeg)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq aria2 ffmpeg curl jq
+
+      - name: Install Python & CLI Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests yt-dlp
+
+      - name: High-Speed Download & Local Upload to EarnVids API
+        env:
+          EARNVIDS_API_KEY: "47202gy09k73xaina8y8t"
+        run: |
+          ARGS=("--url" "${{ inputs.media_url }}" "--mode" "${{ inputs.upload_mode }}")
+
+          if [ -n "${{ inputs.custom_filename }}" ]; then
+            ARGS+=("--name" "${{ inputs.custom_filename }}")
+          fi
+
+          if [ -n "${{ inputs.file_title }}" ]; then
+            ARGS+=("--title" "${{ inputs.file_title }}")
+          fi
+
+          if [ -n "${{ inputs.file_descr }}" ]; then
+            ARGS+=("--descr" "${{ inputs.file_descr }}")
+          fi
+          
+          if [ -n "${{ inputs.folder_id }}" ]; then
+            ARGS+=("--folder" "${{ inputs.folder_id }}")
+          fi
+
+          if [ -n "${{ inputs.category_id }}" ]; then
+            ARGS+=("--cat-id" "${{ inputs.category_id }}")
+          fi
+
+          if [ -n "${{ inputs.tags }}" ]; then
+            ARGS+=("--tags" "${{ inputs.tags }}")
+          fi
+
+          ARGS+=("--public" "${{ inputs.is_public }}")
+          ARGS+=("--adult" "${{ inputs.is_adult }}")
+
+          if [ -n "${{ inputs.upload_server }}" ]; then
+            ARGS+=("--server" "${{ inputs.upload_server }}")
+          fi
+
+          if [ -n "${{ inputs.user_agent }}" ]; then
+            ARGS+=("--user-agent" "${{ inputs.user_agent }}")
+          fi
+
+          if [ -f "earnvids_uploader.py" ]; then
+            python earnvids_uploader.py "${ARGS[@]}"
+          elif [ -f "earnvids/earnvids_uploader.py" ]; then
+            python earnvids/earnvids_uploader.py "${ARGS[@]}"
+          fi
