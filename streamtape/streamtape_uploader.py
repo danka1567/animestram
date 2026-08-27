@@ -7,6 +7,7 @@ Downloads any M3U8, HLS stream, MP4, MKV, etc. at maximum speed and uploads dire
 import os
 import sys
 import time
+import shutil
 import argparse
 import requests
 import subprocess
@@ -36,8 +37,26 @@ def high_speed_download(media_url: str, output_dir: str, custom_name: str = None
     """
     Downloads M3U8 / HLS / MP4 / any stream media using yt-dlp + aria2c 16-thread multi-connection engine.
     """
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
-    out_template = custom_name if custom_name else "%(title)s.%(ext)s"
+    out_dir_path = Path(output_dir)
+    out_dir_path.mkdir(parents=True, exist_ok=True)
+
+    # Clean previous partial files to prevent fragment collision
+    for part_file in out_dir_path.glob("*.part*"):
+        try:
+            part_file.unlink()
+        except Exception:
+            pass
+
+    has_ffmpeg = shutil.which("ffmpeg") is not None
+    is_m3u8 = ".m3u8" in media_url.lower() or "hls" in media_url.lower()
+
+    if custom_name:
+        out_template = custom_name
+    elif is_m3u8 and not has_ffmpeg:
+        out_template = "%(title)s.ts"
+    else:
+        out_template = "%(title)s.%(ext)s"
+
     out_path_template = os.path.join(output_dir, out_template)
 
     print("\n" + "=" * 70)
@@ -45,41 +64,46 @@ def high_speed_download(media_url: str, output_dir: str, custom_name: str = None
     print(f"URL: {media_url}")
     print("=" * 70)
 
-    # Multi-connection download engine using aria2c (16 connections) and yt-dlp (16 concurrent HLS fragments)
-    cmd_aria2 = [
-        "yt-dlp",
-        "--downloader", "aria2c",
-        "--downloader-args", "aria2c:-x 16 -s 16 -k 1M --max-connection-per-server=16 --min-split-size=1M --optimize-concurrent-downloads=true --file-allocation=none",
-        "--concurrent-fragments", "16",
-        "--hls-use-mpegts",
-        "--retries", "10",
-        "--fragment-retries", "10",
-        "--no-check-certificates",
-        "-o", out_path_template,
-        media_url
-    ]
-
-    if user_agent:
-        cmd_aria2.extend(["--user-agent", user_agent])
-
+    has_aria2 = shutil.which("aria2c") is not None
     start_time = time.time()
-    try:
-        print("[Engine] Launching multi-threaded aria2c + yt-dlp pipeline...")
-        subprocess.run(cmd_aria2, check=True)
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        print(f"[Warning] aria2c engine unavailable or returned error ({e}).")
-        print("[Engine] Falling back to native high-concurrency yt-dlp/ffmpeg engine...")
-        cmd_fallback = [
+
+    if has_aria2:
+        cmd_aria2 = [
             "yt-dlp",
+            "--downloader", "aria2c",
+            "--downloader-args", "aria2c:-x 16 -s 16 -k 1M --max-connection-per-server=16 --min-split-size=1M --optimize-concurrent-downloads=true --file-allocation=none",
             "--concurrent-fragments", "16",
+            "--hls-use-mpegts",
             "--retries", "10",
             "--fragment-retries", "10",
+            "--no-check-certificates",
             "-o", out_path_template,
             media_url
         ]
         if user_agent:
-            cmd_fallback.extend(["--user-agent", user_agent])
-        subprocess.run(cmd_fallback, check=True)
+            cmd_aria2.extend(["--user-agent", user_agent])
+
+        try:
+            print("[Engine] Launching multi-threaded aria2c + yt-dlp pipeline...")
+            subprocess.run(cmd_aria2, check=True)
+        except Exception as e:
+            print(f"[Warning] aria2c engine returned error ({e}). Falling back to native yt-dlp...")
+            has_aria2 = False
+
+    if not has_aria2:
+        print("[Engine] Using native high-concurrency yt-dlp engine...")
+        cmd_native = [
+            "yt-dlp",
+            "--retries", "10",
+            "--fragment-retries", "10",
+            "--no-check-certificates",
+            "--hls-use-mpegts",
+            "-o", out_path_template,
+            media_url
+        ]
+        if user_agent:
+            cmd_native.extend(["--user-agent", user_agent])
+        subprocess.run(cmd_native, check=True)
 
     elapsed = time.time() - start_time
 
