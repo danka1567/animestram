@@ -6,6 +6,7 @@ on:
       media_url:
         description: 'Direct Media URL or Stream URL (M3U8 / HLS, MP4, MKV, AVI, etc.)'
         required: true
+        default: 'https://raw.githubusercontent.com/mediaelement/mediaelement-files/master/big_buck_bunny.mp4'
         type: string
       upload_mode:
         description: 'Upload Mode (local = download to runner & upload | remote = API remote upload)'

@@ -275,7 +275,7 @@ def remote_upload_luluvdo(api_key: str, media_url: str, folder_id: str = None):
 
 def main():
     parser = argparse.ArgumentParser(description="Download any media/m3u8 and upload locally to Luluvdo / LuluStream API.")
-    parser.add_argument("--url", "-u", required=True, help="Media/Stream URL (M3U8, HLS, MP4, MKV, etc.)")
+    parser.add_argument("--url", "-u", default="https://raw.githubusercontent.com/mediaelement/mediaelement-files/master/big_buck_bunny.mp4", help="Media/Stream URL (default: Big Buck Bunny sample)")
     parser.add_argument("--mode", "-m", choices=["local", "remote"], default="local", help="Upload mode (default: local)")
     parser.add_argument("--key", "-k", default=os.getenv("LULUVDO_API_KEY", LULUVDO_API_KEY), help="Luluvdo API Key")
     parser.add_argument("--folder", "-f", default=None, help="Luluvdo Target Folder ID (optional)")
