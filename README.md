@@ -1,6 +1,6 @@
-# Media Downloader & Uploader (GitHub Actions & CLI)
+# Luluvdo Media Downloader & Uploader (GitHub Action & CLI)
 
-Multi-threaded media downloader and uploader for **Luluvdo** and **Streamtape** powered by `yt-dlp`, `aria2c`, and GitHub Actions.
+Multi-threaded media downloader and uploader for **Luluvdo / LuluStream** powered by `yt-dlp`, `aria2c`, and GitHub Actions.
 
 ---
 
@@ -10,17 +10,15 @@ Multi-threaded media downloader and uploader for **Luluvdo** and **Streamtape** 
 .
 ├── .github/
 │   └── workflows/
-│       ├── luluvdo_downloader_uploader.yml       # Luluvdo GitHub Action
-│       └── streamtape_downloader_uploader.yml   # Streamtape GitHub Action
+│       └── luluvdo_downloader_uploader.yml       # Luluvdo GitHub Action
 ├── luluvodo/
-│   ├── luluvdo_uploader.py                      # Luluvdo CLI uploader script
-│   ├── luluvdooapiinfo.txt                      # Luluvdo API reference
-│   ├── README.md                                # Luluvdo documentation
-│   └── requirements.txt
-├── streamtape/
-│   ├── streamtape_uploader.py                   # Streamtape CLI uploader script
-│   ├── README.md                                # Streamtape documentation
-│   └── requirements.txt
+│   ├── .github/workflows/
+│   │   └── luluvdo_downloader_uploader.yml
+│   ├── luluvdo_uploader.py                      # Multi-fragment downloader & uploader
+│   ├── luluvdooapiinfo.txt                      # API reference documentation
+│   ├── README.md                                # Platform documentation
+│   └── requirements.txt                         # Dependencies
+├── README.md
 └── requirements.txt
 ```
 
@@ -28,14 +26,27 @@ Multi-threaded media downloader and uploader for **Luluvdo** and **Streamtape** 
 
 ## 🚀 Running via GitHub Actions
 
-1. Go to the **Actions** tab in this repository.
-2. Select your desired workflow on the left:
-   - **Download & Local Upload to Luluvdo**
-   - **Download & Local Upload to Streamtape**
-3. Click **Run workflow** and provide:
-   - `media_url` *(required)*: Direct video URL or M3U8/HLS stream URL.
-   - `custom_filename` *(optional)*: E.g., `video.mp4`.
-   - `folder_id` *(optional)*: Target folder ID.
-   - `upload_mode` *(optional, for Luluvdo)*: `local` (default) or `remote`.
-   - `user_agent` *(optional)*: Custom User-Agent header for protected streams.
+1. Go to the **Actions** tab in this GitHub repository.
+2. Select **Download & Local Upload to Luluvdo** on the left sidebar.
+3. Click **Run workflow** and fill in:
+   - **`media_url`** *(required)*: The direct media link or `.m3u8` stream.
+   - **`upload_mode`** *(default: `local`)*: Choose `local` (download to runner & upload) or `remote`.
+   - **`custom_filename`** *(optional)*: E.g., `video.mp4`.
+   - **`folder_id`** *(optional)*: Target folder ID.
+   - **`user_agent`** *(optional)*: Custom User-Agent header if required by protected streams.
 4. Click **Run workflow**.
+
+---
+
+## 💻 Running Locally (CLI)
+
+```bash
+cd luluvodo
+pip install -r requirements.txt
+
+# Download and upload local mode
+python luluvdo_uploader.py --url "<STREAM_OR_VIDEO_URL>"
+
+# Remote upload mode (direct URL to Luluvdo API)
+python luluvdo_uploader.py --url "<VIDEO_URL>" --mode remote
+```
