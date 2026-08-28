@@ -1,7 +1,7 @@
 /**
  * KuroStream — Anime Web Application
- * Integration: MyAnimeList (Jikan v4 REST API) & FlixCloud Streaming Iframe
- * Server: https://animeg-flixcloud.ytbro8326.workers.dev/?mal_id={id}&ep={ep}&lang={sub|dub}
+ * Powered by AniList GraphQL API (Ultra Fast & Reliable)
+ * Video Server: https://animeg-flixcloud.ytbro8326.workers.dev/?mal_id={id}&ep={ep}&lang={sub|dub}
  */
 
 (function () {
@@ -10,144 +10,14 @@
   // API & Stream Config
   const CONFIG = {
     STREAM_BASE_URL: 'https://animeg-flixcloud.ytbro8326.workers.dev/',
-    JIKAN_API_BASE: 'https://api.jikan.moe/v4',
-    CACHE_KEY_PREFIX: 'kuro_cache_',
-    WATCHLIST_STORAGE_KEY: 'kuro_watchlist_v1',
-    HISTORY_STORAGE_KEY: 'kuro_history_v1',
+    ANILIST_API_URL: 'https://graphql.anilist.co',
+    CACHE_KEY_PREFIX: 'kuro_anilist_',
+    WATCHLIST_STORAGE_KEY: 'kuro_watchlist_v3',
+    HISTORY_STORAGE_KEY: 'kuro_history_v3',
     DEFAULT_MAL_ID: 1735, // Naruto: Shippuuden
     DEFAULT_EP: 250,
     DEFAULT_LANG: 'dub'
   };
-
-  // Curated Fallback Anime Data (Guarantees instant load even if Jikan rate limits)
-  const FALLBACK_POPULAR = [
-    {
-      mal_id: 1735,
-      title: "Naruto: Shippuuden",
-      title_japanese: "NARUTO -ナルト- 疾風伝",
-      score: 8.27,
-      episodes: 500,
-      year: 2007,
-      type: "TV",
-      status: "Finished Airing",
-      rating: "PG-13",
-      synopsis: "It has been two and a half years since Naruto Uzumaki left Konohagakure, the Hidden Leaf Village, for intense training following events which fueled his desire to be stronger. Now Akatsuki, the mysterious organization of elite rogue ninja, is closing in on their grand plan.",
-      images: {
-        webp: {
-          image_url: "https://cdn.myanimelist.net/images/anime/1565/111305.webp",
-          large_image_url: "https://cdn.myanimelist.net/images/anime/1565/111305l.webp"
-        }
-      },
-      genres: [{ name: "Action" }, { name: "Adventure" }, { name: "Fantasy" }],
-      studios: [{ name: "Studio Pierrot" }],
-      duration: "23 min per ep"
-    },
-    {
-      mal_id: 52991,
-      title: "Sousou no Frieren",
-      title_japanese: "葬送のフリーレン",
-      score: 9.33,
-      episodes: 28,
-      year: 2023,
-      type: "TV",
-      status: "Finished Airing",
-      rating: "PG-13",
-      synopsis: "During their decade-long quest to defeat the Demon King, the members of the hero's party—Himmel, Heiter, Eisen, and the elf mage Frieren—forged deep bonds while bringing peace to the realm. As an elf, Frieren lives for thousands of years and embarks on a new journey to understand humanity.",
-      images: {
-        webp: {
-          image_url: "https://cdn.myanimelist.net/images/anime/1015/138006.webp",
-          large_image_url: "https://cdn.myanimelist.net/images/anime/1015/138006l.webp"
-        }
-      },
-      genres: [{ name: "Adventure" }, { name: "Drama" }, { name: "Fantasy" }],
-      studios: [{ name: "Madhouse" }],
-      duration: "24 min per ep"
-    },
-    {
-      mal_id: 5114,
-      title: "Fullmetal Alchemist: Brotherhood",
-      title_japanese: "鋼の錬金術師 FULLMETAL ALCHEMIST",
-      score: 9.09,
-      episodes: 64,
-      year: 2009,
-      type: "TV",
-      status: "Finished Airing",
-      rating: "R - 17+",
-      synopsis: "After a horrific alchemy experiment goes wrong in the Elric household, brothers Edward and Alphonse are left in a catastrophic new reality. Disregarding the alchemy prohibition against human transmutation, the boys attempted to bring their recently deceased mother back to life.",
-      images: {
-        webp: {
-          image_url: "https://cdn.myanimelist.net/images/anime/1208/94745.webp",
-          large_image_url: "https://cdn.myanimelist.net/images/anime/1208/94745l.webp"
-        }
-      },
-      genres: [{ name: "Action" }, { name: "Adventure" }, { name: "Drama" }, { name: "Fantasy" }],
-      studios: [{ name: "Bones" }],
-      duration: "24 min per ep"
-    },
-    {
-      mal_id: 38000,
-      title: "Kimetsu no Yaiba (Demon Slayer)",
-      title_japanese: "鬼滅の刃",
-      score: 8.48,
-      episodes: 26,
-      year: 2019,
-      type: "TV",
-      status: "Finished Airing",
-      rating: "R - 17+",
-      synopsis: "Ever since the death of his father, the burden of supporting the family has fallen upon Tanjirou Kamado's shoulders. One day, Tanjirou finds his family slaughtered and his sister Nezuko turned into a demon.",
-      images: {
-        webp: {
-          image_url: "https://cdn.myanimelist.net/images/anime/1286/99889.webp",
-          large_image_url: "https://cdn.myanimelist.net/images/anime/1286/99889l.webp"
-        }
-      },
-      genres: [{ name: "Action" }, { name: "Fantasy" }, { name: "Supernatural" }],
-      studios: [{ name: "ufotable" }],
-      duration: "23 min per ep"
-    },
-    {
-      mal_id: 40748,
-      title: "Jujutsu Kaisen",
-      title_japanese: "呪術廻戦",
-      score: 8.59,
-      episodes: 24,
-      year: 2020,
-      type: "TV",
-      status: "Finished Airing",
-      rating: "R - 17+",
-      synopsis: "Idly indulging in paranormal activities with the Occult Club, high schooler Yuuji Itadori spends his days at either the clubroom or the hospital. However, this leisurely lifestyle takes a turn for the strange when he encounters a cursed item.",
-      images: {
-        webp: {
-          image_url: "https://cdn.myanimelist.net/images/anime/1171/109222.webp",
-          large_image_url: "https://cdn.myanimelist.net/images/anime/1171/109222l.webp"
-        }
-      },
-      genres: [{ name: "Action" }, { name: "Fantasy" }, { name: "Supernatural" }],
-      studios: [{ name: "MAPPA" }],
-      duration: "23 min per ep"
-    },
-    {
-      mal_id: 21,
-      title: "One Piece",
-      title_japanese: "ONE PIECE",
-      score: 8.73,
-      episodes: 1120,
-      year: 1999,
-      type: "TV",
-      status: "Currently Airing",
-      rating: "PG-13",
-      synopsis: "Barely surviving in a barrel after passing through a terrible whirlpool at sea, carefree Monkey D. Luffy ends up aboard a pirate ship. Guided by his childhood hero Red-Haired Shanks, Luffy sets out on his journey to find the legendary One Piece.",
-      images: {
-        webp: {
-          image_url: "https://cdn.myanimelist.net/images/anime/1244/138851.webp",
-          large_image_url: "https://cdn.myanimelist.net/images/anime/1244/138851l.webp"
-        }
-      },
-      genres: [{ name: "Action" }, { name: "Adventure" }, { name: "Fantasy" }],
-      studios: [{ name: "Toei Animation" }],
-      duration: "24 min per ep"
-    }
-  ];
 
   // Application State
   const state = {
@@ -166,13 +36,24 @@
     navbar: document.getElementById('mainNavbar'),
     logoBtn: document.getElementById('logoBtn'),
     searchInput: document.getElementById('searchInput'),
+    searchContainer: document.getElementById('searchContainer'),
     searchDropdown: document.getElementById('searchDropdown'),
     searchLoader: document.getElementById('searchLoader'),
     clearSearchBtn: document.getElementById('clearSearchBtn'),
+    mobileSearchToggleBtn: document.getElementById('mobileSearchToggleBtn'),
+
+    // Mobile Navigation Drawer & Bottom Bar
+    mobileMenuBtn: document.getElementById('mobileMenuBtn'),
+    mobileNavDrawer: document.getElementById('mobileNavDrawer'),
+    mobileNavOverlay: document.getElementById('mobileNavOverlay'),
+    closeMobileNavBtn: document.getElementById('closeMobileNavBtn'),
+    drawerQuickIdBtn: document.getElementById('drawerQuickIdBtn'),
+    mobileDrawerWatchlistCount: document.getElementById('mobileDrawerWatchlistCount'),
+    bottomNavWatchlistBadge: document.getElementById('bottomNavWatchlistBadge'),
+    mobileBottomNav: document.getElementById('mobileBottomNav'),
     
     // Player
     playerSection: document.getElementById('playerSection'),
-    heroSection: document.getElementById('heroSection'),
     animeIframe: document.getElementById('animeIframe'),
     iframeLoader: document.getElementById('iframeLoader'),
     serverUrlText: document.getElementById('serverUrlText'),
@@ -245,6 +126,7 @@
      ========================================================================== */
   
   function showToast(message, icon = 'fa-check-circle') {
+    if (!DOM.toastContainer) return;
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.innerHTML = `<i class="fa-solid ${icon} highlight-cyan"></i> <span>${message}</span>`;
@@ -274,97 +156,265 @@
     }
   }
 
+  function stripHtml(html) {
+    if (!html) return '';
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  }
+
   /* ==========================================================================
-     Jikan API Client (with Cache & Rate-limit Handling)
+     AniList GraphQL API Client (Fast, No Rate Limits)
      ========================================================================== */
-  
-  async function fetchWithCache(url, cacheMinutes = 30) {
-    const cacheKey = CONFIG.CACHE_KEY_PREFIX + btoa(url).replace(/=/g, '');
+
+  async function executeGraphQL(query, variables = {}) {
+    const cacheKey = CONFIG.CACHE_KEY_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify({ query, variables })))).replace(/=/g, '');
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.timestamp < cacheMinutes * 60 * 1000) {
+        if (Date.now() - parsed.timestamp < 30 * 60 * 1000) {
           return parsed.data;
         }
       } catch (e) {}
     }
 
     try {
-      const res = await fetch(url);
-      if (!res.ok) {
-        throw new Error(`API Error: ${res.status}`);
+      const response = await fetch(CONFIG.ANILIST_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ query, variables })
+      });
+
+      if (!response.ok) {
+        throw new Error(`GraphQL Error: ${response.status}`);
       }
-      const json = await res.json();
-      try {
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-          timestamp: Date.now(),
-          data: json
-        }));
-      } catch (e) {}
-      return json;
+
+      const result = await response.json();
+      if (result && result.data) {
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            timestamp: Date.now(),
+            data: result.data
+          }));
+        } catch (e) {}
+        return result.data;
+      }
+      return null;
     } catch (err) {
-      console.warn(`Fetch error for ${url}:`, err);
+      console.warn('AniList GraphQL request failed:', err);
       return null;
     }
   }
 
-  async function getAnimeDetails(malId) {
-    // Check fallback list first for immediate match
-    const fallbackMatch = FALLBACK_POPULAR.find(a => a.mal_id === Number(malId));
-    
-    const url = `${CONFIG.JIKAN_API_BASE}/anime/${malId}/full`;
-    const res = await fetchWithCache(url, 60);
-    if (res && res.data) {
-      return res.data;
+  /**
+   * Format AniList media item into standard KuroStream anime object
+   */
+  function normalizeAniListAnime(media) {
+    if (!media) return null;
+    const malId = media.idMal || media.id;
+    const title = media.title ? (media.title.english || media.title.romaji || media.title.native) : `Anime #${malId}`;
+    const score = media.averageScore ? (media.averageScore / 10).toFixed(1) : (media.score ? media.score.toFixed(1) : 'N/A');
+    const poster = (media.coverImage && (media.coverImage.extraLarge || media.coverImage.large || media.coverImage.medium))
+      || (media.images && media.images.webp && media.images.webp.large_image_url)
+      || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400';
+
+    const studiosList = media.studios && media.studios.nodes && media.studios.nodes.length 
+      ? media.studios.nodes.map(s => s.name).join(', ') 
+      : 'Animation Studio';
+
+    let totalAiredEpisodes = media.episodes || null;
+    const isAiring = media.status === 'RELEASING' || media.status === 'AIRING' || !media.status;
+
+    if (media.nextAiringEpisode && media.nextAiringEpisode.episode) {
+      totalAiredEpisodes = media.nextAiringEpisode.episode - 1;
     }
-    return fallbackMatch || {
-      mal_id: Number(malId),
-      title: `Anime #${malId}`,
-      title_japanese: `Anime (ID: ${malId})`,
-      score: 8.0,
-      episodes: 24,
-      year: new Date().getFullYear(),
-      type: 'TV',
-      status: 'Airing / Complete',
+
+    return {
+      mal_id: malId,
+      anilist_id: media.id,
+      title: title,
+      title_japanese: media.title ? media.title.native : '',
+      score: score,
+      episodes: totalAiredEpisodes,
+      isAiring: isAiring,
+      nextEpisode: media.nextAiringEpisode ? media.nextAiringEpisode.episode : null,
+      year: media.seasonYear || media.year || '2024',
+      type: media.format || 'TV',
+      status: media.status === 'RELEASING' ? 'Airing' : (media.status === 'FINISHED' ? 'Finished' : (media.status || 'Finished')),
       rating: 'PG-13',
-      synopsis: 'Streaming stream from MyAnimeList database.',
-      images: {
-        webp: {
-          image_url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400',
-          large_image_url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800'
+      synopsis: stripHtml(media.description) || 'Watch this anime in HD with SUB and DUB.',
+      poster: poster,
+      bannerImage: media.bannerImage || '',
+      genres: media.genres || ['Action', 'Fantasy'],
+      studios: studiosList,
+      duration: media.duration ? `${media.duration} min/ep` : '24 min/ep'
+    };
+  }
+
+  async function getAnimeDetails(malId) {
+    malId = Number(malId);
+    const query = `
+      query ($idMal: Int) {
+        Media (idMal: $idMal, type: ANIME) {
+          id
+          idMal
+          title { romaji english native }
+          description
+          episodes
+          nextAiringEpisode { episode timeUntilAiring }
+          averageScore
+          bannerImage
+          coverImage { extraLarge large medium }
+          genres
+          studios(isMain: true) { nodes { name } }
+          status
+          seasonYear
+          format
+          duration
         }
-      },
-      genres: [{ name: 'Anime' }],
-      studios: [{ name: 'Studio' }],
-      duration: '24 min'
+      }
+    `;
+
+    const res = await executeGraphQL(query, { idMal: malId });
+    if (res && res.Media) {
+      return normalizeAniListAnime(res.Media);
+    }
+
+    // Fallback if MAL ID wasn't directly matched
+    return {
+      mal_id: malId,
+      title: `Anime #${malId}`,
+      title_japanese: '',
+      score: '8.0',
+      episodes: 24,
+      isAiring: false,
+      year: '2024',
+      type: 'TV',
+      status: 'Finished',
+      rating: 'PG-13',
+      synopsis: 'Streaming directly from video server with MyAnimeList ID mapping.',
+      poster: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400',
+      bannerImage: '',
+      genres: ['Anime', 'Action'],
+      studios: 'Animation Studio',
+      duration: '24 min/ep'
     };
   }
 
   async function fetchTrendingAnime() {
-    const url = `${CONFIG.JIKAN_API_BASE}/top/anime?filter=airing&limit=12`;
-    const res = await fetchWithCache(url, 15);
-    return (res && res.data && res.data.length > 0) ? res.data : FALLBACK_POPULAR;
+    const query = `
+      query {
+        Page (page: 1, perPage: 12) {
+          media (type: ANIME, sort: TRENDING_DESC, isAdult: false) {
+            id
+            idMal
+            title { romaji english native }
+            coverImage { extraLarge large medium }
+            bannerImage
+            averageScore
+            episodes
+            nextAiringEpisode { episode }
+            format
+            status
+            seasonYear
+            genres
+          }
+        }
+      }
+    `;
+    const res = await executeGraphQL(query);
+    if (res && res.Page && res.Page.media) {
+      return res.Page.media.map(normalizeAniListAnime);
+    }
+    return [];
   }
 
   async function fetchTopRatedAnime() {
-    const url = `${CONFIG.JIKAN_API_BASE}/top/anime?limit=12`;
-    const res = await fetchWithCache(url, 60);
-    return (res && res.data && res.data.length > 0) ? res.data : FALLBACK_POPULAR;
+    const query = `
+      query {
+        Page (page: 1, perPage: 12) {
+          media (type: ANIME, sort: SCORE_DESC, isAdult: false) {
+            id
+            idMal
+            title { romaji english native }
+            coverImage { extraLarge large medium }
+            bannerImage
+            averageScore
+            episodes
+            nextAiringEpisode { episode }
+            format
+            status
+            seasonYear
+            genres
+          }
+        }
+      }
+    `;
+    const res = await executeGraphQL(query);
+    if (res && res.Page && res.Page.media) {
+      return res.Page.media.map(normalizeAniListAnime);
+    }
+    return [];
   }
 
-  async function searchAnime(query) {
-    if (!query || query.trim().length < 2) return [];
-    const url = `${CONFIG.JIKAN_API_BASE}/anime?q=${encodeURIComponent(query)}&limit=16&sfw=true`;
-    const res = await fetchWithCache(url, 5);
-    return res && res.data ? res.data : [];
+  async function searchAnime(searchText) {
+    if (!searchText || searchText.trim().length < 2) return [];
+    const query = `
+      query ($search: String) {
+        Page (page: 1, perPage: 16) {
+          media (type: ANIME, search: $search, isAdult: false) {
+            id
+            idMal
+            title { romaji english native }
+            coverImage { extraLarge large medium }
+            averageScore
+            episodes
+            nextAiringEpisode { episode }
+            format
+            status
+            seasonYear
+            genres
+          }
+        }
+      }
+    `;
+    const res = await executeGraphQL(query, { search: searchText.trim() });
+    if (res && res.Page && res.Page.media) {
+      return res.Page.media.map(normalizeAniListAnime);
+    }
+    return [];
   }
 
-  async function fetchAnimeByGenre(genreId) {
-    if (!genreId) return fetchTrendingAnime();
-    const url = `${CONFIG.JIKAN_API_BASE}/anime?genres=${genreId}&order_by=popularity&sort=asc&limit=12`;
-    const res = await fetchWithCache(url, 30);
-    return (res && res.data && res.data.length > 0) ? res.data : FALLBACK_POPULAR;
+  async function fetchAnimeByGenre(genreName) {
+    if (!genreName) return fetchTrendingAnime();
+    const query = `
+      query ($genre: String) {
+        Page (page: 1, perPage: 12) {
+          media (type: ANIME, genre: $genre, sort: POPULARITY_DESC, isAdult: false) {
+            id
+            idMal
+            title { romaji english native }
+            coverImage { extraLarge large medium }
+            averageScore
+            episodes
+            nextAiringEpisode { episode }
+            format
+            status
+            seasonYear
+            genres
+          }
+        }
+      }
+    `;
+    const res = await executeGraphQL(query, { genre: genreName });
+    if (res && res.Page && res.Page.media) {
+      return res.Page.media.map(normalizeAniListAnime);
+    }
+    return [];
   }
 
   /* ==========================================================================
@@ -373,12 +423,9 @@
 
   /**
    * Load Anime Stream into the Iframe
-   * @param {number|string} malId - MyAnimeList ID
-   * @param {number|string} episode - Episode Number
-   * @param {string} lang - 'sub' or 'dub'
    */
   async function loadStream(malId, episode = 1, lang = 'dub', shouldScroll = true) {
-    malId = Number(malId);
+    malId = Number(malId) || CONFIG.DEFAULT_MAL_ID;
     episode = Math.max(1, Number(episode) || 1);
     lang = (lang === 'sub' || lang === 'dub') ? lang : 'dub';
 
@@ -386,9 +433,8 @@
     state.currentEp = episode;
     state.currentLang = lang;
 
-    // Show Player & Hide Hero
+    // Show Player Section
     DOM.playerSection.classList.remove('hidden');
-    DOM.heroSection.classList.add('hidden');
 
     // Update Player UI Badges
     DOM.playerEpBadge.textContent = `EP ${episode}`;
@@ -396,11 +442,10 @@
     DOM.quickEpInput.value = episode;
 
     // Set Active Sub/Dub buttons
-    DOM.langSubBtn.classList.toggle('active', lang === 'sub');
     DOM.langDubBtn.classList.toggle('active', lang === 'dub');
+    DOM.langSubBtn.classList.toggle('active', lang === 'sub');
 
-    // Build the specific stream iframe URL
-    // Format: https://animeg-flixcloud.ytbro8326.workers.dev/?mal_id=1735&ep=250&lang=dub
+    // Build the clean stream iframe URL:
     const streamUrl = `${CONFIG.STREAM_BASE_URL}?mal_id=${malId}&ep=${episode}&lang=${lang}`;
     
     // Update iframe placeholder loader
@@ -421,7 +466,7 @@
       DOM.playerSection.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Fetch Full Anime Metadata from MAL
+    // Fetch Full Anime Metadata
     renderLoadingAnimeDetails(malId);
     const anime = await getAnimeDetails(malId);
     state.currentAnimeData = anime;
@@ -442,8 +487,8 @@
 
   function renderLoadingAnimeDetails(malId) {
     DOM.playerAnimeTitle.textContent = `Anime #${malId}`;
-    DOM.detailTitle.textContent = 'Fetching MyAnimeList details...';
-    DOM.detailSynopsis.textContent = 'Please wait while anime data is retrieved from MAL database.';
+    DOM.detailTitle.textContent = 'Loading anime details...';
+    DOM.detailSynopsis.textContent = 'Fetching metadata from AniList database...';
   }
 
   function renderAnimeDetails(anime, currentEp) {
@@ -451,30 +496,35 @@
 
     DOM.playerAnimeTitle.textContent = anime.title || `Anime #${anime.mal_id}`;
     DOM.detailTitle.textContent = anime.title || 'Untitled Anime';
-    DOM.detailTitleJp.textContent = anime.title_japanese || anime.title_english || '';
-    DOM.detailScore.innerHTML = `<i class="fa-solid fa-star"></i> ${anime.score ? anime.score.toFixed(2) : 'N/A'}`;
+    DOM.detailTitleJp.textContent = anime.title_japanese || '';
+    DOM.detailScore.innerHTML = `<i class="fa-solid fa-star"></i> ${anime.score || 'N/A'}`;
     DOM.detailType.textContent = anime.type || 'TV';
     DOM.detailStatus.textContent = anime.status || 'Finished';
-    DOM.detailYear.textContent = anime.year || (anime.aired && anime.aired.prop && anime.aired.prop.from ? anime.aired.prop.from.year : 'N/A');
-    DOM.detailRating.textContent = anime.rating ? anime.rating.split(' ')[0] : 'PG-13';
+    DOM.detailYear.textContent = anime.year || '2024';
+    DOM.detailRating.textContent = anime.rating || 'PG-13';
     DOM.detailMalId.textContent = anime.mal_id;
     
-    // Total episodes count
-    const totalEps = anime.episodes || Math.max(currentEp, 24);
+    const totalEps = anime.episodes || Math.max(currentEp, 1);
     state.totalEpisodes = totalEps;
-    DOM.detailEpisodes.textContent = anime.episodes ? `${anime.episodes} Episodes` : `${totalEps}+ (Ongoing)`;
-    DOM.totalEpLabel.textContent = anime.episodes ? `/ ${anime.episodes}` : '/ ?';
-    DOM.epSelectorCount.textContent = `${totalEps} Total Episodes`;
+    
+    if (anime.isAiring) {
+      DOM.detailEpisodes.textContent = `${totalEps} Episodes Aired (Ongoing)`;
+      DOM.detailStatus.textContent = 'Airing';
+      DOM.totalEpLabel.textContent = `/ ${totalEps}`;
+      DOM.epSelectorCount.textContent = `${totalEps} Eps Aired`;
+    } else {
+      DOM.detailEpisodes.textContent = `${totalEps} Episodes`;
+      DOM.detailStatus.textContent = anime.status || 'Finished';
+      DOM.totalEpLabel.textContent = `/ ${totalEps}`;
+      DOM.epSelectorCount.textContent = `${totalEps} Total Eps`;
+    }
 
     // Studio & Duration
-    DOM.detailStudios.textContent = anime.studios && anime.studios.length ? anime.studios.map(s => s.name).join(', ') : 'Unknown';
+    DOM.detailStudios.textContent = anime.studios || 'Studio';
     DOM.detailDuration.textContent = anime.duration || '24 min/ep';
 
     // Poster Image
-    const posterUrl = (anime.images && anime.images.webp && anime.images.webp.large_image_url) 
-      || (anime.images && anime.images.jpg && anime.images.jpg.large_image_url) 
-      || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400';
-    DOM.detailPoster.src = posterUrl;
+    DOM.detailPoster.src = anime.poster;
 
     // Genres Tags
     DOM.detailGenres.innerHTML = '';
@@ -482,16 +532,16 @@
       anime.genres.forEach(g => {
         const tag = document.createElement('span');
         tag.className = 'genre-tag';
-        tag.textContent = g.name;
+        tag.textContent = typeof g === 'string' ? g : g.name;
         DOM.detailGenres.appendChild(tag);
       });
     }
 
     // Synopsis
-    DOM.detailSynopsis.textContent = anime.synopsis || 'No synopsis provided for this anime on MyAnimeList.';
+    DOM.detailSynopsis.textContent = anime.synopsis || 'No synopsis available.';
 
-    // External Link
-    DOM.malProfileLink.href = anime.url || `https://myanimelist.net/anime/${anime.mal_id}`;
+    // External MAL Link
+    DOM.malProfileLink.href = `https://myanimelist.net/anime/${anime.mal_id}`;
 
     // Render Episode Selector Buttons
     renderEpisodeSelector(totalEps, currentEp);
@@ -501,7 +551,7 @@
   }
 
   /**
-   * Render Episode Selector with Chunking for Long Anime (e.g. 500+ episodes)
+   * Render Episode Selector with Chunking for Long Anime
    */
   function renderEpisodeSelector(total, currentEp) {
     const CHUNK_SIZE = 100;
@@ -569,21 +619,17 @@
     
     // Remove if already exists
     history = history.filter(item => item.mal_id !== anime.mal_id);
-    
-    const poster = (anime.images && anime.images.webp && anime.images.webp.image_url) 
-      || (anime.images && anime.images.jpg && anime.images.jpg.image_url) || '';
 
     history.unshift({
       mal_id: anime.mal_id,
       title: anime.title || `Anime #${anime.mal_id}`,
       ep: ep,
       lang: lang,
-      poster: poster,
+      poster: anime.poster || '',
       totalEps: anime.episodes || '?',
       timestamp: Date.now()
     });
 
-    // Keep max 20 items
     if (history.length > 20) history = history.slice(0, 20);
     saveStorage(CONFIG.HISTORY_STORAGE_KEY, history);
     state.history = history;
@@ -610,7 +656,7 @@
           <img src="${item.poster}" alt="${item.title}" class="card-poster" loading="lazy">
           <div class="card-badges">
             <span class="card-score"><i class="fa-solid fa-clock"></i> Ep ${item.ep}</span>
-            <span class="card-eps">${item.lang.toUpperCase()}</span>
+            <span class="card-eps">${(item.lang || 'dub').toUpperCase()}</span>
           </div>
           <div class="card-play-overlay">
             <div class="play-btn-circle"><i class="fa-solid fa-play"></i></div>
@@ -619,13 +665,13 @@
         <div class="card-info">
           <h3 class="card-title">${item.title}</h3>
           <div class="card-subtext">
-            <span>Resume Episode ${item.ep}</span>
+            <span>Resume Ep ${item.ep} (${(item.lang || 'dub').toUpperCase()})</span>
             <span class="highlight-cyan"><i class="fa-solid fa-circle-play"></i></span>
           </div>
         </div>
       `;
       card.addEventListener('click', () => {
-        loadStream(item.mal_id, item.ep, item.lang);
+        loadStream(item.mal_id, item.ep, item.lang || 'dub');
       });
       DOM.continueWatchingGrid.appendChild(card);
     });
@@ -640,14 +686,12 @@
       watchlist.splice(existsIndex, 1);
       showToast(`Removed "${anime.title}" from Watchlist`, 'fa-trash');
     } else {
-      const poster = (anime.images && anime.images.webp && anime.images.webp.image_url) 
-        || (anime.images && anime.images.jpg && anime.images.jpg.image_url) || '';
       watchlist.unshift({
         mal_id: anime.mal_id,
         title: anime.title,
         score: anime.score || 'N/A',
         episodes: anime.episodes || '?',
-        poster: poster,
+        poster: anime.poster || '',
         addedAt: Date.now()
       });
       showToast(`Saved "${anime.title}" to Watchlist!`, 'fa-bookmark');
@@ -662,15 +706,26 @@
   function updateBookmarkButtonState(malId) {
     const watchlist = loadStorage(CONFIG.WATCHLIST_STORAGE_KEY, []);
     const isSaved = watchlist.some(item => item.mal_id === Number(malId));
-    DOM.bookmarkBtn.innerHTML = isSaved ? '<i class="fa-solid fa-bookmark highlight-pink"></i>' : '<i class="fa-regular fa-bookmark"></i>';
-    DOM.bookmarkBtn.title = isSaved ? 'Remove from Watchlist' : 'Add to Watchlist';
-    DOM.watchlistCount.textContent = watchlist.length;
+    if (DOM.bookmarkBtn) {
+      DOM.bookmarkBtn.innerHTML = isSaved ? '<i class="fa-solid fa-bookmark highlight-pink"></i>' : '<i class="fa-regular fa-bookmark"></i>';
+      DOM.bookmarkBtn.title = isSaved ? 'Remove from Watchlist' : 'Add to Watchlist';
+    }
+    syncWatchlistBadges(watchlist.length);
+  }
+
+  function syncWatchlistBadges(count) {
+    if (DOM.watchlistCount) DOM.watchlistCount.textContent = count;
+    if (DOM.mobileDrawerWatchlistCount) DOM.mobileDrawerWatchlistCount.textContent = count;
+    if (DOM.bottomNavWatchlistBadge) {
+      DOM.bottomNavWatchlistBadge.textContent = count;
+      DOM.bottomNavWatchlistBadge.style.display = count > 0 ? 'flex' : 'none';
+    }
   }
 
   function renderWatchlist() {
     const watchlist = loadStorage(CONFIG.WATCHLIST_STORAGE_KEY, []);
     state.watchlist = watchlist;
-    DOM.watchlistCount.textContent = watchlist.length;
+    syncWatchlistBadges(watchlist.length);
 
     if (watchlist.length === 0) {
       DOM.watchlistGrid.innerHTML = `
@@ -697,16 +752,11 @@
     const card = document.createElement('div');
     card.className = 'anime-card';
 
-    const poster = (anime.images && anime.images.webp && anime.images.webp.large_image_url) 
-      || (anime.images && anime.images.jpg && anime.images.jpg.large_image_url)
-      || (anime.images && anime.images.webp && anime.images.webp.image_url)
-      || anime.poster
-      || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400';
-
-    const score = anime.score ? Number(anime.score).toFixed(2) : 'N/A';
+    const poster = anime.poster || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400';
+    const score = anime.score || 'N/A';
     const epCount = anime.episodes ? `${anime.episodes} EPS` : 'AIRING';
     const type = anime.type || 'TV';
-    const year = anime.year || (anime.aired && anime.aired.prop && anime.aired.prop.from ? anime.aired.prop.from.year : '');
+    const year = anime.year || '';
 
     card.innerHTML = `
       <div class="card-poster-wrapper">
@@ -723,7 +773,7 @@
         <h3 class="card-title" title="${anime.title}">${anime.title}</h3>
         <div class="card-subtext">
           <span>${type} ${year ? '• ' + year : ''}</span>
-          <span class="highlight-pink"><i class="fa-solid fa-circle-play"></i> Watch</span>
+          <span class="highlight-pink"><i class="fa-solid fa-circle-play"></i> Play (DUB)</span>
         </div>
       </div>
     `;
@@ -771,7 +821,7 @@
         const results = await searchAnime(query);
         DOM.searchLoader.style.display = 'none';
         renderSearchDropdown(results, query);
-      }, 350);
+      }, 300);
     });
 
     DOM.searchInput.addEventListener('keydown', (e) => {
@@ -779,6 +829,7 @@
         const query = DOM.searchInput.value.trim();
         if (query) {
           DOM.searchDropdown.classList.remove('show');
+          DOM.searchContainer.classList.remove('mobile-active');
           performFullSearch(query);
         }
       }
@@ -788,12 +839,28 @@
       DOM.searchInput.value = '';
       DOM.clearSearchBtn.style.display = 'none';
       DOM.searchDropdown.classList.remove('show');
+      DOM.searchInput.focus();
     });
+
+    // Mobile search toggle button
+    if (DOM.mobileSearchToggleBtn) {
+      DOM.mobileSearchToggleBtn.addEventListener('click', () => {
+        DOM.searchContainer.classList.toggle('mobile-active');
+        if (DOM.searchContainer.classList.contains('mobile-active')) {
+          DOM.searchInput.focus();
+        }
+      });
+    }
 
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
-      if (!DOM.searchInput.contains(e.target) && !DOM.searchDropdown.contains(e.target)) {
+      if (!DOM.searchInput.contains(e.target) && 
+          !DOM.searchDropdown.contains(e.target) && 
+          (!DOM.mobileSearchToggleBtn || !DOM.mobileSearchToggleBtn.contains(e.target))) {
         DOM.searchDropdown.classList.remove('show');
+        if (window.innerWidth <= 540) {
+          DOM.searchContainer.classList.remove('mobile-active');
+        }
       }
     });
 
@@ -819,11 +886,9 @@
     slice.forEach(anime => {
       const item = document.createElement('div');
       item.className = 'search-item';
-      const thumb = (anime.images && anime.images.webp && anime.images.webp.image_url) 
-        || (anime.images && anime.images.jpg && anime.images.jpg.image_url) || '';
 
       item.innerHTML = `
-        <img src="${thumb}" alt="${anime.title}" class="search-item-thumb">
+        <img src="${anime.poster}" alt="${anime.title}" class="search-item-thumb">
         <div class="search-item-info">
           <div class="search-item-title">${anime.title}</div>
           <div class="search-item-meta">
@@ -835,6 +900,7 @@
       `;
       item.addEventListener('click', () => {
         DOM.searchDropdown.classList.remove('show');
+        DOM.searchContainer.classList.remove('mobile-active');
         DOM.searchInput.value = '';
         DOM.clearSearchBtn.style.display = 'none';
         loadStream(anime.mal_id, 1, 'dub');
@@ -842,7 +908,6 @@
       DOM.searchDropdown.appendChild(item);
     });
 
-    // "View all results" option
     const viewAll = document.createElement('div');
     viewAll.className = 'search-item';
     viewAll.style.justifyContent = 'center';
@@ -851,6 +916,7 @@
     viewAll.innerHTML = `<i class="fa-solid fa-arrow-right"></i> View all results for "${query}"`;
     viewAll.addEventListener('click', () => {
       DOM.searchDropdown.classList.remove('show');
+      DOM.searchContainer.classList.remove('mobile-active');
       performFullSearch(query);
     });
     DOM.searchDropdown.appendChild(viewAll);
@@ -869,38 +935,40 @@
   }
 
   /* ==========================================================================
-     Event Listeners & Controls
+     Event Listeners & Unified Navigation Synchronization
      ========================================================================== */
 
   function initEventListeners() {
-    // Back to home button
-    DOM.backToHomeBtn.addEventListener('click', () => {
+    function closePlayerAndGoHome() {
       DOM.playerSection.classList.add('hidden');
-      DOM.heroSection.classList.remove('hidden');
+      DOM.animeIframe.src = '';
+      DOM.searchResultsSection.classList.add('hidden');
+      window.history.replaceState({}, '', window.location.pathname);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    }
+
+    // Back to home button
+    DOM.backToHomeBtn.addEventListener('click', closePlayerAndGoHome);
 
     // Logo click -> go to home
     DOM.logoBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      DOM.playerSection.classList.add('hidden');
-      DOM.heroSection.classList.remove('hidden');
-      DOM.searchResultsSection.classList.add('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      closePlayerAndGoHome();
+      setActiveNavTarget('home');
     });
 
-    // Sub / Dub toggles
-    DOM.langSubBtn.addEventListener('click', () => {
-      if (state.currentLang !== 'sub') {
-        loadStream(state.currentMalId, state.currentEp, 'sub', false);
-        showToast('Switched to Japanese SUB', 'fa-closed-captioning');
-      }
-    });
-
+    // Sub / Dub toggles (Default DUB)
     DOM.langDubBtn.addEventListener('click', () => {
       if (state.currentLang !== 'dub') {
         loadStream(state.currentMalId, state.currentEp, 'dub', false);
         showToast('Switched to English DUB', 'fa-microphone-lines');
+      }
+    });
+
+    DOM.langSubBtn.addEventListener('click', () => {
+      if (state.currentLang !== 'sub') {
+        loadStream(state.currentMalId, state.currentEp, 'sub', false);
+        showToast('Switched to Japanese SUB', 'fa-closed-captioning');
       }
     });
 
@@ -986,10 +1054,13 @@
       showToast('Watch history cleared', 'fa-trash');
     });
 
-    // Quick MAL ID Modal
-    DOM.quickIdBtn.addEventListener('click', () => {
+    // Quick MAL ID Modal Handlers
+    function openQuickModal() {
       DOM.quickModal.classList.add('show');
-    });
+      closeMobileDrawer();
+    }
+    DOM.quickIdBtn.addEventListener('click', openQuickModal);
+    if (DOM.drawerQuickIdBtn) DOM.drawerQuickIdBtn.addEventListener('click', openQuickModal);
     DOM.closeQuickModal.addEventListener('click', () => DOM.quickModal.classList.remove('show'));
     DOM.cancelQuickModal.addEventListener('click', () => DOM.quickModal.classList.remove('show'));
 
@@ -1011,7 +1082,7 @@
       btn.addEventListener('click', () => {
         const id = btn.dataset.mal;
         const ep = btn.dataset.ep;
-        const lang = btn.dataset.lang;
+        const lang = btn.dataset.lang || 'dub';
         DOM.quickModal.classList.remove('show');
         loadStream(id, ep, lang);
       });
@@ -1023,28 +1094,79 @@
         DOM.genreChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
 
-        const genreId = chip.dataset.genre;
+        const genreName = chip.dataset.genre || chip.textContent.trim();
+        const finalGenre = genreName === 'All Genres' ? '' : genreName;
         DOM.trendingGrid.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>';
-        const data = await fetchAnimeByGenre(genreId);
+        const data = await fetchAnimeByGenre(finalGenre);
         renderGrid(DOM.trendingGrid, data);
       });
     });
 
-    // Nav Links handling
-    document.querySelectorAll('.nav-link').forEach(link => {
+    // ==========================================================
+    // Mobile Drawer Open / Close Logic
+    // ==========================================================
+    function openMobileDrawer() {
+      DOM.mobileNavDrawer.classList.add('show');
+      DOM.mobileNavOverlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileDrawer() {
+      DOM.mobileNavDrawer.classList.remove('show');
+      DOM.mobileNavOverlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    if (DOM.mobileMenuBtn) DOM.mobileMenuBtn.addEventListener('click', openMobileDrawer);
+    if (DOM.closeMobileNavBtn) DOM.closeMobileNavBtn.addEventListener('click', closeMobileDrawer);
+    if (DOM.mobileNavOverlay) DOM.mobileNavOverlay.addEventListener('click', closeMobileDrawer);
+
+    // ==========================================================
+    // Universal Navigation Synchronizer (Desktop, Drawer & Bottom Bar)
+    // ==========================================================
+    function setActiveNavTarget(target) {
+      // Synchronize Desktop Navbar
+      document.querySelectorAll('.nav-link').forEach(l => {
+        l.classList.toggle('active', l.dataset.nav === target);
+      });
+
+      // Synchronize Mobile Drawer Links
+      document.querySelectorAll('.mobile-nav-link').forEach(l => {
+        l.classList.toggle('active', l.dataset.nav === target);
+      });
+
+      // Synchronize Mobile Bottom Nav Items
+      document.querySelectorAll('.bottom-nav-item').forEach(l => {
+        l.classList.toggle('active', l.dataset.nav === target);
+      });
+
+      // Execute action for target
+      if (target === 'home') {
+        closePlayerAndGoHome();
+      } else if (target === 'watchlist') {
+        DOM.watchlistSection.classList.remove('hidden');
+        renderWatchlist();
+        DOM.watchlistSection.scrollIntoView({ behavior: 'smooth' });
+      } else if (target === 'trending') {
+        const trendingSection = document.getElementById('trending');
+        if (trendingSection) trendingSection.scrollIntoView({ behavior: 'smooth' });
+      } else if (target === 'top') {
+        const topSection = document.getElementById('top-rated');
+        if (topSection) topSection.scrollIntoView({ behavior: 'smooth' });
+      } else if (target === 'genres') {
+        const genresSection = document.getElementById('genres');
+        if (genresSection) genresSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Attach listeners to all nav elements
+    document.querySelectorAll('.nav-link, .mobile-nav-link, .bottom-nav-item').forEach(link => {
       link.addEventListener('click', (e) => {
         const target = link.dataset.nav;
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-
-        if (target === 'watchlist') {
-          DOM.watchlistSection.classList.remove('hidden');
-          renderWatchlist();
-          DOM.watchlistSection.scrollIntoView({ behavior: 'smooth' });
-        } else if (target === 'home') {
-          DOM.playerSection.classList.add('hidden');
-          DOM.heroSection.classList.remove('hidden');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (target) {
+          e.preventDefault();
+          setActiveNavTarget(target);
+          closeMobileDrawer();
         }
       });
     });
@@ -1060,21 +1182,23 @@
     renderContinueWatching();
     renderWatchlist();
 
-    // Check if URL contains direct query params (e.g. ?mal_id=1735&ep=250&lang=dub)
+    // Check if URL contains direct query params
     const urlParams = new URLSearchParams(window.location.search);
     const paramMalId = urlParams.get('mal_id') || urlParams.get('id');
     const paramEp = urlParams.get('ep') || urlParams.get('episode');
     const paramLang = urlParams.get('lang') || urlParams.get('audio');
 
     if (paramMalId) {
-      // Direct stream link detected in URL
       const id = parseInt(paramMalId, 10);
-      const ep = parseInt(paramEp, 10) || 1;
+      const ep = paramEp ? parseInt(paramEp, 10) : 1;
       const lang = (paramLang === 'sub' || paramLang === 'dub') ? paramLang : 'dub';
       loadStream(id, ep, lang);
+    } else {
+      DOM.playerSection.classList.add('hidden');
+      DOM.animeIframe.src = '';
     }
 
-    // Load Trending and Top Rated sections concurrently
+    // Load Trending and Top Rated sections concurrently via AniList GraphQL
     const [trending, topRated] = await Promise.all([
       fetchTrendingAnime(),
       fetchTopRatedAnime()
@@ -1084,7 +1208,7 @@
     renderGrid(DOM.topRatedGrid, topRated);
   }
 
-  // Expose global controller for inline HTML onclick handlers
+  // Expose global controller
   window.app = {
     loadStream,
     toggleWatchlist,

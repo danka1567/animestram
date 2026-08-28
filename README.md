@@ -1,120 +1,44 @@
-# Video Upload & Download APIs (GitHub Actions & CLI)
+# KuroStream — Anime Streaming Web App
 
-Multi-threaded media downloaders and uploaders for **Streamtape**, **FileMoon**, **Luluvdo / LuluStream**, and **EarnVids** powered by `yt-dlp`, `aria2c` (16 parallel threads), and GitHub Actions.
+A modern, responsive anime streaming web client with MyAnimeList (MAL) data integration and FlixCloud video streaming server.
+
+## 🚀 Live Demo
+- **Website**: [https://danka1567.github.io/animestram/](https://danka1567.github.io/animestram/)
+- **Direct Stream Example**: [https://danka1567.github.io/animestram/?mal_id=1735&ep=250&lang=dub](https://danka1567.github.io/animestram/?mal_id=1735&ep=250&lang=dub)
 
 ---
 
-## 📁 Platforms & Directory Structure
+## ⚡ Features
 
-```
-.
-├── .github/
-│   └── workflows/
-│       ├── streamtape_downloader_uploader.yml    # Streamtape GitHub Action
-│       ├── filemoon_downloader_uploader.yml      # FileMoon GitHub Action
-│       ├── luluvdo_downloader_uploader.yml       # Luluvdo GitHub Action
-│       └── earnvids_downloader_uploader.yml      # EarnVids GitHub Action
-├── streamtape/
-│   ├── .github/workflows/
-│   │   └── streamtape_downloader_uploader.yml
-│   ├── streamtape_uploader.py                    # Multi-fragment downloader & uploader
-│   ├── streamtapeapiinfo.txt                     # Streamtape API documentation & keys
-│   ├── README.md                                 # Standalone repo docs
-│   └── requirements.txt
-├── filemoon/
-│   ├── .github/workflows/
-│   │   └── filemoon_downloader_uploader.yml
-│   ├── filemoon_uploader.py                      # Multi-fragment downloader & uploader
-│   ├── filemoonapiinfo.txt                       # FileMoon API documentation & keys
-│   ├── README.md                                 # Standalone repo docs
-│   └── requirements.txt
-├── earnvids/
-│   ├── .github/workflows/
-│   │   └── earnvids_downloader_uploader.yml
-│   ├── earnvids_uploader.py                      # Multi-fragment downloader & uploader
-│   ├── earnvidsapiinfo.txt                       # EarnVids API documentation
-│   ├── README.md                                 # Standalone repo docs
-│   └── requirements.txt
-├── luluvodo/
-│   ├── .github/workflows/
-│   │   └── luluvdo_downloader_uploader.yml
-│   ├── luluvdo_uploader.py                       # Multi-fragment downloader & uploader
-│   ├── luluvdooapiinfo.txt                       # Luluvdo API documentation
-│   ├── README.md                                 # Standalone repo docs
-│   └── requirements.txt
-├── README.md
-└── requirements.txt
+- **FlixCloud Video Stream Iframe**: Seamlessly embeds and streams episodes with `?mal_id={id}&ep={ep}&lang={sub|dub}`.
+- **SUB & DUB Switcher**: Instant switching between Japanese audio with subtitles and English dubbing.
+- **Episode Navigator**: Next/Prev episode buttons, episode number input jump, and paginated selector tabs for 1000+ episode series (e.g. One Piece, Naruto).
+- **MyAnimeList API (Jikan v4)**:
+  - Live debounce search with autocomplete preview cards.
+  - Seasonal trending and all-time top-rated anime grids.
+  - Genre filter chips (Action, Adventure, Fantasy, Romance, Sci-Fi, etc.).
+  - Direct MAL ID stream loader modal.
+- **Local Storage Persistence**:
+  - "Continue Watching" history with auto-resume.
+  - "Watchlist" bookmarks.
+- **Deep Linking**: Shareable URL parameters (`?mal_id=1735&ep=250&lang=dub`).
+
+---
+
+## 📂 Project Structure
+
+```text
+├── index.html        # Main HTML layout & video player
+├── style.css         # Cyberpunk neon dark theme styling
+├── app.js            # Jikan API client, stream controller & state
+└── README.md         # Documentation
 ```
 
 ---
 
-## 🚀 Running via GitHub Actions
+## 🛠️ Deploy to GitHub Pages
 
-### 1. Streamtape Uploader
-1. Go to the **Actions** tab.
-2. Select **Download & Local Upload to Streamtape**.
-3. Click **Run workflow** and enter your `media_url` and parameters.
-
-### 2. FileMoon Uploader
-1. Go to the **Actions** tab.
-2. Select **Download & Local Upload to FileMoon**.
-3. Click **Run workflow** and enter your `media_url` and parameters.
-
-### 3. EarnVids Uploader
-1. Go to the **Actions** tab.
-2. Select **Download & Local Upload to EarnVids**.
-3. Click **Run workflow** and enter your `media_url` and desired metadata.
-
-### 4. Luluvdo Uploader
-1. Go to the **Actions** tab.
-2. Select **Download & Local Upload to Luluvdo**.
-3. Click **Run workflow** and enter your `media_url`.
-
----
-
-## 💻 Running Locally (CLI)
-
-### Streamtape
-```bash
-cd streamtape
-pip install -r requirements.txt
-
-# Check account info
-python streamtape_uploader.py --mode account
-
-# High speed download and upload
-python streamtape_uploader.py --url "<STREAM_OR_VIDEO_URL>" --name "video.mp4"
-```
-
-### FileMoon
-```bash
-cd filemoon
-pip install -r requirements.txt
-
-# Check account info
-python filemoon_uploader.py --mode account
-
-# High speed download and upload
-python filemoon_uploader.py --url "<STREAM_OR_VIDEO_URL>" --name "video.mp4"
-```
-
-### EarnVids
-```bash
-cd earnvids
-pip install -r requirements.txt
-
-# Check account info
-python earnvids_uploader.py --mode account
-
-# High speed download and upload
-python earnvids_uploader.py --url "<STREAM_OR_VIDEO_URL>" --title "My Video"
-```
-
-### Luluvdo
-```bash
-cd luluvodo
-pip install -r requirements.txt
-
-# High speed download and upload
-python luluvdo_uploader.py --url "<STREAM_OR_VIDEO_URL>"
-```
+1. In your GitHub repository, go to **Settings** → **Pages**.
+2. Set Source to **Deploy from a branch**.
+3. Select **main** branch and `/ (root)` folder, then click **Save**.
+4. Your website will be available at `https://<username>.github.io/animestram/`.
