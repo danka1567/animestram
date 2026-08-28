@@ -9,13 +9,13 @@ on:
         default: 'https://raw.githubusercontent.com/mediaelement/mediaelement-files/master/big_buck_bunny.mp4'
         type: string
       upload_mode:
-        description: 'Upload Mode (local = download to runner & upload | remote = API remote upload)'
+        description: 'Upload Mode (remote = direct server import [RECOMMENDED for >100MB] | local = download to runner & upload [max 100MB])'
         required: true
-        default: 'local'
+        default: 'remote'
         type: choice
         options:
-          - local
           - remote
+          - local
       custom_filename:
         description: 'Custom File Name (optional, e.g. video.mp4)'
         required: false

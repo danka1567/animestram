@@ -250,9 +250,11 @@ def get_file_status(api_key: str, file_id: str):
         return None
 
 
-def upload_to_filemoon(api_key: str, file_path: Path, visibility: int = 1):
+def upload_to_filemoon(api_key: str, file_path: Path, visibility: int = 1, max_retries: int = 3):
     """
     Performs local file multipart upload directly to FileMoon API.
+    Note: FileMoon API (via Cloudflare) limits direct multipart POST uploads to ~100MB.
+    For files > 100MB, use Remote Upload mode (--mode remote).
     """
     print("\n" + "=" * 70)
     print("📤 [2/2] STARTING LOCAL FILE UPLOAD TO FILEMOON")
@@ -264,57 +266,87 @@ def upload_to_filemoon(api_key: str, file_path: Path, visibility: int = 1):
         "Accept": "application/json",
         "User-Agent": DEFAULT_HEADERS["User-Agent"]
     }
+    file_size = file_path.stat().st_size
     print(f"Target Upload Endpoint: {upload_endpoint}")
-    print(f"Target File: {file_path.name} ({format_size(file_path.stat().st_size)})")
+    print(f"Target File: {file_path.name} ({format_size(file_size)})")
+
+    if file_size >= 100 * 1024 * 1024:
+        print("\n⚠️ [NOTICE: LARGE FILE DETECTED]")
+        print(f"• File size is {format_size(file_size)}, which exceeds Cloudflare's 100MB direct POST upload limit.")
+        print("• FileMoon's direct API endpoint is protected by Cloudflare and may reject direct POST > 100MB with 502 Bad Gateway / 413.")
+        print("• Recommended: Use Remote Upload mode (--mode remote) for files > 100MB.\n")
 
     post_data = {
         "visibility": str(visibility)
     }
 
-    start_time = time.time()
-    with ProgressFileReader(file_path) as reader:
-        resp = requests.post(
-            upload_endpoint,
-            data=post_data,
-            files={"file": (file_path.name, reader)},
-            headers=headers,
-            timeout=7200
+    for attempt in range(1, max_retries + 1):
+        if attempt > 1:
+            print(f"\n[Retry] Attempt {attempt}/{max_retries}...")
+            time.sleep(3)
+
+        start_time = time.time()
+        try:
+            with ProgressFileReader(file_path) as reader:
+                resp = requests.post(
+                    upload_endpoint,
+                    data=post_data,
+                    files={"file": (file_path.name, reader)},
+                    headers=headers,
+                    timeout=7200
+                )
+        except Exception as e:
+            print(f"\n[Error] Upload request exception: {e}")
+            if attempt == max_retries:
+                return None
+            continue
+
+        elapsed = time.time() - start_time
+        print(f"\nUpload request finished in {elapsed:.2f}s.")
+
+        try:
+            data = resp.json()
+        except Exception:
+            print(f"\nRaw Response ({resp.status_code}): {resp.text[:500]}")
+            if resp.status_code in [502, 503, 504, 413]:
+                if file_size >= 100 * 1024 * 1024:
+                    print("\n❌ Upload failed due to Cloudflare 100MB direct POST limit (502/413).")
+                    print("💡 SOLUTION: Run this workflow with `upload_mode: remote` (or `--mode remote`) so FileMoon imports the video directly!")
+                    return None
+            if attempt == max_retries:
+                return None
+            continue
+
+        # Parse response (FileMoon returns {"type": "success", "shared_id": "...", "download_link": "..."})
+        is_success = (
+            (resp.status_code in [200, 201]) and 
+            (data.get("type") == "success" or data.get("success") is True)
         )
+        if is_success:
+            file_info = data.get("file") or data.get("data") or {}
+            file_id = data.get("shared_id") or file_info.get("id")
+            file_name = file_info.get("name") or file_path.name
+            page_url = data.get("download_link") or (f"https://filemoon.org/{file_id}/file" if file_id else None)
+            watch_url = file_info.get("watch_url") or (f"https://filemoon.org/{file_id}/watch" if file_id else None)
+            embed_url = f"https://filemoon.org/e/{file_id}" if file_id else None
 
-    elapsed = time.time() - start_time
-    print(f"\nUpload request finished in {elapsed:.2f}s.")
+            print("\n" + "=" * 70)
+            print("🎉 SUCCESS: FILE UPLOADED TO FILEMOON 🎉")
+            print(f"  • File Name:   {file_name}")
+            print(f"  • File ID:     {file_id}")
+            if page_url:
+                print(f"  • Page Link:   {page_url}")
+            if watch_url:
+                print(f"  • Watch Link:  {watch_url}")
+            if embed_url:
+                print(f"  • Embed Link:  {embed_url}")
+            print("=" * 70 + "\n")
+            return data
+        else:
+            print(f"\nResponse: {data}")
+            return data
 
-    try:
-        data = resp.json()
-    except Exception:
-        print(f"Raw Response ({resp.status_code}): {resp.text}")
-        return None
-
-    # Parse response
-    if resp.status_code in [200, 201] and data.get("success"):
-        file_info = data.get("data", {})
-        file_id = file_info.get("id")
-        file_name = file_info.get("name") or file_path.name
-        urls = file_info.get("urls", {})
-        page_url = urls.get("page") or f"https://filemoon.org/{file_id}/file" if file_id else None
-        watch_url = urls.get("watch") or f"https://filemoon.org/{file_id}/watch" if file_id else None
-        embed_url = urls.get("embed") or f"https://filemoon.org/{file_id}/embed" if file_id else None
-
-        print("\n" + "=" * 70)
-        print("🎉 SUCCESS: FILE UPLOADED TO FILEMOON 🎉")
-        print(f"  • File Name:   {file_name}")
-        print(f"  • File ID:     {file_id}")
-        if page_url:
-            print(f"  • Page Link:   {page_url}")
-        if watch_url:
-            print(f"  • Watch Link:  {watch_url}")
-        if embed_url:
-            print(f"  • Embed Link:  {embed_url}")
-        print("=" * 70 + "\n")
-        return data
-    else:
-        print(f"\nResponse: {data}")
-        return data
+    return None
 
 
 def update_file(api_key: str, file_id: str, name: str = None, description: str = None,

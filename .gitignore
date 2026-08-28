@@ -1,0 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Download directories and partials
+downloads/
+*.part*
+*.ytdl
+*.aria2
+
+# Nested unzipped folder
+streatapeuploaddownload-main/
