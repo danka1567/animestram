@@ -54,6 +54,7 @@
     
     // Player
     playerSection: document.getElementById('playerSection'),
+    videoContainer: document.getElementById('videoContainer'),
     animeIframe: document.getElementById('animeIframe'),
     iframeLoader: document.getElementById('iframeLoader'),
     serverUrlText: document.getElementById('serverUrlText'),
@@ -461,9 +462,10 @@
     // Sync URL hash / query parameters for bookmarking & sharing
     updateUrlParams(malId, episode, lang);
 
-    // Scroll to player smoothly
+    // Scroll to player smoothly (optimized for mobile full-screen viewing)
     if (shouldScroll) {
-      DOM.playerSection.scrollIntoView({ behavior: 'smooth' });
+      const scrollTarget = DOM.videoContainer || DOM.playerSection;
+      scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // Fetch Full Anime Metadata
@@ -1028,8 +1030,10 @@
 
     DOM.theaterModeBtn.addEventListener('click', () => {
       document.body.classList.toggle('theater-mode');
-      const isTheater = document.body.classList.contains('theater-mode');
-      showToast(isTheater ? 'Theater mode ON' : 'Theater mode OFF', 'fa-expand');
+      if (DOM.playerSection) DOM.playerSection.classList.toggle('player-enlarged');
+      const isTheater = document.body.classList.contains('theater-mode') || (DOM.playerSection && DOM.playerSection.classList.contains('player-enlarged'));
+      DOM.theaterModeBtn.innerHTML = isTheater ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>';
+      showToast(isTheater ? 'Big Cinema Player Mode ON' : 'Standard Player Mode', isTheater ? 'fa-compress' : 'fa-expand');
     });
 
     DOM.shareStreamBtn.addEventListener('click', () => {

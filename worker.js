@@ -28,19 +28,19 @@ const DEFAULT_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
   '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
-const MEGAPLAY_REFERER  = 'https://megaplay.buzz/';
-const MEGAPLAY_ORIGIN   = 'https://megaplay.buzz';
+const MEGAPLAY_REFERER = 'https://megaplay.buzz/';
+const MEGAPLAY_ORIGIN = 'https://megaplay.buzz';
 const FLIXCLOUD_REFERER = 'https://flixcloud.cc/';
-const ANIMEGG_REFERER   = 'https://www.animegg.org/';
+const ANIMEGG_REFERER = 'https://www.animegg.org/';
 const ANISNATCH_REFERER = 'https://anisnatch.top/';
-const ANIDB_BASE        = 'https://anidb.app';
-const ANIDB_REFERER     = 'https://anidb.app/';
+const ANIDB_BASE = 'https://anidb.app';
+const ANIDB_REFERER = 'https://anidb.app/';
 
-const SEGMENT_CACHE_TTL      = 60 * 60 * 6; // 6 hours
-const PLAYLIST_CACHE_TTL     = 2;          // 2 seconds
-const PLAYLIST_SWR_WINDOW    = 4;          // 4 seconds
+const SEGMENT_CACHE_TTL = 60 * 60 * 6; // 6 hours
+const PLAYLIST_CACHE_TTL = 2;          // 2 seconds
+const PLAYLIST_SWR_WINDOW = 4;          // 4 seconds
 const PREFETCH_SEGMENT_COUNT = 6;
-const PREFETCH_CONCURRENCY   = 6;
+const PREFETCH_CONCURRENCY = 6;
 
 const MEGAPLAY_DB_URL =
   'https://raw.githubusercontent.com/donkarboy/megaplay-extractor-updated/refs/heads/main/streams/megaplay_stream.json';
@@ -50,7 +50,7 @@ const ANISNATCH_JSON_BASE =
 const ANISNATCH_JSON_FILES = Array.from({ length: 15 }, (_, i) =>
   i === 0 ? 'streams.json' : `streams_${i + 1}.json`
 );
-const ANISNATCH_Q_TIERS = [480, 720, 1080, 360];
+const ANISNATCH_Q_TIERS = [1080, 720, 480, 360];
 
 const ANIMEGG_PREEXTRACTED_URL =
   'https://raw.githubusercontent.com/ytbro8326-sudo/animegg_streams-extractor/refs/heads/main/output/animegg_streams.json';
@@ -73,7 +73,11 @@ const HTML = `<!DOCTYPE html>
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="theme-color" content="#09090f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ani · Multi-Server Anime Player</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -117,11 +121,14 @@ const HTML = `<!DOCTYPE html>
         body {
             width: 100%;
             height: 100%;
+            height: 100dvh;
+            min-height: -webkit-fill-available;
             background: var(--bg-base);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
             color: var(--text-main);
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none;
         }
 
         #app {
@@ -129,6 +136,7 @@ const HTML = `<!DOCTYPE html>
             flex-direction: column;
             width: 100%;
             height: 100%;
+            height: 100dvh;
             position: relative;
         }
 
@@ -137,7 +145,7 @@ const HTML = `<!DOCTYPE html>
             position: relative;
             display: flex;
             align-items: center;
-            padding: 4px 10px;
+            padding: max(4px, env(safe-area-inset-top, 4px)) max(10px, env(safe-area-inset-right, 10px)) 4px max(10px, env(safe-area-inset-left, 10px));
             min-height: 38px;
             background: var(--bg-topbar);
             border-bottom: 1px solid var(--border);
@@ -176,6 +184,7 @@ const HTML = `<!DOCTYPE html>
             flex-shrink: 0;
             padding-right: 4px;
             text-decoration: none;
+            touch-action: manipulation;
         }
 
         .brand-text {
@@ -216,19 +225,21 @@ const HTML = `<!DOCTYPE html>
         }
 
         .field-group input {
-            width: 54px;
-            height: 26px;
+            width: 56px;
+            height: 28px;
             padding: 2px 6px;
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 5px;
+            border-radius: 6px;
             color: var(--text-main);
-            font-size: 11.5px;
+            font-size: 13px;
             font-weight: 600;
             font-family: 'JetBrains Mono', monospace;
             outline: none;
             transition: border-color .15s, box-shadow .15s;
             text-align: center;
+            -webkit-appearance: none;
+            margin: 0;
         }
 
         .field-group input:focus {
@@ -244,11 +255,11 @@ const HTML = `<!DOCTYPE html>
             border-radius: 6px;
             overflow: hidden;
             flex-shrink: 0;
-            height: 26px;
+            height: 28px;
         }
 
         .segmented-group button {
-            padding: 2px 8px;
+            padding: 2px 9px;
             font-size: 11px;
             font-weight: 600;
             border: none;
@@ -260,6 +271,9 @@ const HTML = `<!DOCTYPE html>
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .segmented-group button:hover {
@@ -345,18 +359,21 @@ const HTML = `<!DOCTYPE html>
             align-items: center;
             justify-content: center;
             gap: 4px;
-            padding: 2px 8px;
-            height: 26px;
-            min-height: 26px;
+            padding: 3px 9px;
+            height: 28px;
+            min-height: 28px;
             border: 1px solid var(--border);
             border-radius: 6px;
             background: var(--bg-card);
-            font-size: 11px;
+            font-size: 11.5px;
             font-weight: 600;
             color: var(--text-sub);
             cursor: pointer;
             white-space: nowrap;
             transition: all .15s;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .bar-btn:active {
@@ -375,7 +392,7 @@ const HTML = `<!DOCTYPE html>
             font-weight: 700;
             border-color: var(--accent);
             box-shadow: 0 1px 8px var(--accent-glow);
-            padding: 2px 10px;
+            padding: 3px 12px;
         }
 
         #btn-go:hover {
@@ -392,7 +409,7 @@ const HTML = `<!DOCTYPE html>
             font-weight: 600;
             background: rgba(167, 139, 250, 0.1);
             padding: 3px 8px;
-            height: 26px;
+            height: 28px;
             border-radius: 6px;
             border: 1px solid rgba(167, 139, 250, 0.25);
         }
@@ -407,6 +424,9 @@ const HTML = `<!DOCTYPE html>
             font-size: 10.5px;
             font-weight: 700;
             white-space: nowrap;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #stream-source-badge.show {
@@ -454,18 +474,21 @@ const HTML = `<!DOCTYPE html>
             display: none;
             align-items: center;
             gap: 5px;
-            padding: 2px 9px;
-            height: 26px;
-            min-height: 26px;
+            padding: 3px 10px;
+            height: 28px;
+            min-height: 28px;
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 6px;
             color: var(--text-sub);
-            font-size: 11px;
+            font-size: 11.5px;
             font-weight: 600;
             cursor: pointer;
             transition: all .15s;
             white-space: nowrap;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         #srv-toggle-btn.show {
@@ -485,12 +508,13 @@ const HTML = `<!DOCTYPE html>
             display: none;
             position: absolute;
             inset: 0;
-            background: rgba(0, 0, 0, 0.55);
+            background: rgba(0, 0, 0, 0.65);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
             z-index: 80;
             cursor: pointer;
             transition: opacity .2s ease;
+            touch-action: none;
         }
 
         #server-modal-backdrop.visible {
@@ -506,7 +530,7 @@ const HTML = `<!DOCTYPE html>
             opacity: 0;
             pointer-events: none;
             z-index: 90;
-            background: rgba(14, 14, 22, 0.97);
+            background: rgba(14, 14, 22, 0.98);
             border-left: 1px solid var(--border);
             padding: 16px 14px;
             width: 380px;
@@ -518,7 +542,7 @@ const HTML = `<!DOCTYPE html>
             gap: 10px;
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            transition: transform .26s cubic-bezier(0.16, 1, 0.3, 1), opacity .2s ease;
+            transition: transform .28s cubic-bezier(0.16, 1, 0.3, 1), opacity .2s ease;
         }
 
         #server-panel.visible {
@@ -568,16 +592,18 @@ const HTML = `<!DOCTYPE html>
             font-size: 12px;
             cursor: pointer;
             line-height: 1;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all .15s;
+            touch-action: manipulation;
         }
 
-        #sp-close:hover {
+        #sp-close:hover,
+        #sp-close:active {
             color: var(--text-main);
             border-color: var(--border-hover);
             background: var(--bg-card-hover);
@@ -593,6 +619,13 @@ const HTML = `<!DOCTYPE html>
             border-radius: 8px;
             border: 1px solid var(--border);
             flex-shrink: 0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        #provider-row::-webkit-scrollbar {
+            display: none;
         }
 
         .prov-pill {
@@ -608,6 +641,11 @@ const HTML = `<!DOCTYPE html>
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .prov-pill:hover {
@@ -641,10 +679,17 @@ const HTML = `<!DOCTYPE html>
             display: flex;
             gap: 4px;
             flex-wrap: wrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        #quality-row::-webkit-scrollbar {
+            display: none;
         }
 
         .q-pill {
-            padding: 2px 7px;
+            padding: 3px 8px;
             border-radius: 5px;
             font-size: 10.5px;
             font-weight: 600;
@@ -653,6 +698,11 @@ const HTML = `<!DOCTYPE html>
             color: var(--text-sub);
             cursor: pointer;
             transition: all .15s;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .q-pill:hover {
@@ -678,6 +728,7 @@ const HTML = `<!DOCTYPE html>
             gap: 6px;
             flex: 1;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             padding-right: 3px;
         }
 
@@ -698,7 +749,7 @@ const HTML = `<!DOCTYPE html>
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 12px;
+            padding: 9px 12px;
             border-radius: 8px;
             font-size: 12px;
             font-weight: 600;
@@ -710,13 +761,19 @@ const HTML = `<!DOCTYPE html>
             text-align: left;
             position: relative;
             flex-shrink: 0;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .srv-card:hover {
             background: var(--bg-card-hover);
             color: var(--text-main);
             border-color: var(--border-hover);
-            transform: translateX(-2px);
+        }
+
+        .srv-card:active {
+            transform: scale(0.98);
         }
 
         .srv-card.active {
@@ -731,11 +788,12 @@ const HTML = `<!DOCTYPE html>
             align-items: center;
             gap: 8px;
             min-width: 0;
+            flex: 1;
         }
 
         .srv-prov-dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             flex-shrink: 0;
         }
@@ -751,6 +809,7 @@ const HTML = `<!DOCTYPE html>
             flex-direction: column;
             gap: 1px;
             min-width: 0;
+            overflow: hidden;
         }
 
         .srv-name {
@@ -760,6 +819,7 @@ const HTML = `<!DOCTYPE html>
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 170px;
         }
 
         .srv-subinfo {
@@ -774,7 +834,7 @@ const HTML = `<!DOCTYPE html>
         .srv-card-right {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             flex-shrink: 0;
         }
 
@@ -917,23 +977,26 @@ const HTML = `<!DOCTYPE html>
 
         #toggle-bar-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: max(10px, env(safe-area-inset-top, 10px));
+            right: max(10px, env(safe-area-inset-right, 10px));
             z-index: 20;
-            width: 32px;
-            height: 32px;
-            background: rgba(16, 16, 24, 0.85);
+            width: 34px;
+            height: 34px;
+            background: rgba(16, 16, 24, 0.88);
             border: 1px solid var(--border);
-            border-radius: 7px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(8px);
-            transition: background .15s, border-color .15s;
+            -webkit-backdrop-filter: blur(8px);
+            transition: background .15s, border-color .15s, transform .15s;
+            touch-action: manipulation;
         }
 
-        #toggle-bar-btn:hover {
+        #toggle-bar-btn:hover,
+        #toggle-bar-btn:active {
             background: var(--bg-card-hover);
             border-color: var(--accent);
         }
@@ -952,8 +1015,8 @@ const HTML = `<!DOCTYPE html>
         #autonext-overlay {
             display: none;
             position: absolute;
-            bottom: 24px;
-            right: 24px;
+            bottom: max(20px, env(safe-area-inset-bottom, 20px));
+            right: max(20px, env(safe-area-inset-right, 20px));
             background: rgba(14, 14, 22, .94);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -961,6 +1024,7 @@ const HTML = `<!DOCTYPE html>
             min-width: 200px;
             z-index: 30;
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
         }
 
@@ -1005,50 +1069,127 @@ const HTML = `<!DOCTYPE html>
 
         .an-btns button {
             flex: 1;
-            padding: 5px 0;
+            padding: 6px 0;
             border: none;
-            border-radius: 5px;
-            font-size: 11px;
+            border-radius: 6px;
+            font-size: 11.5px;
             font-weight: 600;
             cursor: pointer;
             transition: background .15s;
+            touch-action: manipulation;
         }
 
         #an-btn-now { background: var(--accent); color: #fff; }
-        #an-btn-now:hover { background: var(--accent-hover); }
+        #an-btn-now:hover, #an-btn-now:active { background: var(--accent-hover); }
         #an-btn-cancel { background: var(--bg-card); color: var(--text-sub); border: 1px solid var(--border); }
-        #an-btn-cancel:hover { background: var(--border); color: var(--text-main); }
+        #an-btn-cancel:hover, #an-btn-cancel:active { background: var(--border); color: var(--text-main); }
 
-        /* ── RESPONSIVE MEDIA QUERIES ───────────────────────── */
+        /* ── RESPONSIVE MEDIA QUERIES (MOBILE FIRST OPTIMIZATIONS) ─── */
         @media (max-width: 768px) {
             #topbar {
-                padding: 4px 8px;
+                padding: max(6px, env(safe-area-inset-top, 6px)) max(8px, env(safe-area-inset-right, 8px)) 6px max(8px, env(safe-area-inset-left, 8px));
             }
 
             #topbar-inner {
                 gap: 6px 5px;
-                max-height: 600px;
-                padding: 4px 1px;
+                max-height: 70vh;
+                padding: 2px 0 4px 0;
+            }
+
+            #prov-toggle {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                max-width: 100%;
+                order: 4;
+            }
+
+            #prov-toggle::-webkit-scrollbar {
+                display: none;
             }
 
             #srv-wrap {
-                margin-left: 0;
+                margin-left: auto;
             }
 
+            /* Bottom Sheet Drawer for Mobile */
             #server-panel {
                 width: 100%;
                 max-width: 100%;
                 min-width: 100%;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 78vh;
+                max-height: 85dvh;
+                border-radius: 18px 18px 0 0;
+                border-top: 1px solid var(--border-hover);
                 border-left: none;
-                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.85);
+                transform: translateY(100%);
+                padding: 14px 14px max(20px, env(safe-area-inset-bottom, 20px));
+                box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.92);
+            }
+
+            #server-panel.visible {
+                transform: translateY(0);
+            }
+
+            .srv-name {
+                max-width: 140px;
             }
 
             #autonext-overlay {
-                bottom: 10px;
-                left: 10px;
-                right: 10px;
+                bottom: max(12px, env(safe-area-inset-bottom, 12px));
+                left: max(12px, env(safe-area-inset-left, 12px));
+                right: max(12px, env(safe-area-inset-right, 12px));
                 min-width: auto;
-                padding: 10px 14px;
+                padding: 12px 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .brand-text {
+                font-size: 12px;
+            }
+
+            .field-group input {
+                width: 50px;
+                height: 26px;
+                font-size: 12px;
+            }
+
+            .segmented-group {
+                height: 26px;
+            }
+
+            .segmented-group button {
+                padding: 2px 7px;
+                font-size: 10.5px;
+            }
+
+            .bar-btn {
+                height: 26px;
+                min-height: 26px;
+                padding: 2px 7px;
+                font-size: 11px;
+            }
+
+            #srv-toggle-btn {
+                height: 26px;
+                min-height: 26px;
+                padding: 2px 8px;
+                font-size: 11px;
+            }
+
+            .srv-name {
+                max-width: 110px;
+            }
+
+            #stream-source-badge {
+                max-width: 160px;
+                font-size: 9.5px;
             }
         }
     </style>
@@ -1065,11 +1206,11 @@ const HTML = `<!DOCTYPE html>
 
                 <div class="field-group">
                     <label>MAL</label>
-                    <input id="inp-mal" type="number" placeholder="20" min="1">
+                    <input id="inp-mal" type="number" placeholder="20" min="1" inputmode="numeric" pattern="[0-9]*">
                 </div>
                 <div class="field-group">
                     <label>Ep</label>
-                    <input id="inp-ep" type="number" placeholder="1" min="1">
+                    <input id="inp-ep" type="number" placeholder="1" min="1" inputmode="numeric" pattern="[0-9]*">
                 </div>
 
                 <!-- Provider Switcher -->
@@ -1326,22 +1467,10 @@ const HTML = `<!DOCTYPE html>
                 if (provOnly.length > 0) filtered = provOnly;
             }
 
-            // Check if AniSnatch provider is active or available in filtered list
-            const isAniSnatch = (preferredProv === 'anisnatch') || (filtered.length > 0 && filtered.some(s => s.provider === 'anisnatch'));
-
-            // Priority: For AniSnatch, 480p is default priority (AniSnatch · AllanimeHD 480p) instead of 1080p
-            const priority = isAniSnatch
-                ? ['480p', '720p', '1080p', '360p', 'HD-1', 'HD-2', 'Master', 'Direct', 'HD', 'Embed']
-                : ['1080p', '720p', 'HD-1', 'HD-2', '480p', '360p', 'Master', 'Direct', 'HD', 'Embed'];
+            const priority = ['1080p', '720p', 'HD-1', 'HD-2', '480p', '360p', 'Master', 'Direct', 'HD', 'Embed'];
 
             const prefStreams = filtered.filter(s => s.lang === preferredLang);
             if (prefStreams.length > 0) {
-                // If anisnatch server is available, default directly to AllanimeHD 480p
-                if (isAniSnatch) {
-                    const anisnatch480 = prefStreams.find(s => s.provider === 'anisnatch' && ((s.quality === '480p') || (s.server || '').includes('480p')));
-                    if (anisnatch480) return anisnatch480;
-                }
-
                 for (const res of priority) {
                     const found = prefStreams.find(s => (s.quality || s.server || '').includes(res));
                     if (found) return found;
@@ -1352,11 +1481,6 @@ const HTML = `<!DOCTYPE html>
             const altLang = preferredLang === 'dub' ? 'sub' : 'dub';
             const altStreams = filtered.filter(s => s.lang === altLang);
             if (altStreams.length > 0) {
-                if (isAniSnatch) {
-                    const anisnatch480 = altStreams.find(s => s.provider === 'anisnatch' && ((s.quality === '480p') || (s.server || '').includes('480p')));
-                    if (anisnatch480) return anisnatch480;
-                }
-
                 for (const res of priority) {
                     const found = altStreams.find(s => (s.quality || s.server || '').includes(res));
                     if (found) return found;
@@ -1772,14 +1896,6 @@ const HTML = `<!DOCTYPE html>
             const qMal = searchParams.get('mal_id') || searchParams.get('malId') || searchParams.get('id');
             const qEp = searchParams.get('ep') || searchParams.get('ep_num') || searchParams.get('episode');
             const qLang = searchParams.get('lang') || searchParams.get('type');
-            const qProv = searchParams.get('provider') || searchParams.get('server');
-            if (qProv && ['all', 'megaplay', 'flixcloud', 'anisnatch', 'animegg', 'anidb'].includes(qProv.toLowerCase())) {
-                currentProvider = qProv.toLowerCase();
-                currentPanelProviderFilter = qProv.toLowerCase();
-                document.querySelectorAll('#prov-toggle button').forEach(b => {
-                    b.classList.toggle('active', b.id === 'btn-prov-' + currentProvider);
-                });
-            }
             if (qMal && qEp) return { malId: qMal, epNum: qEp, lang: qLang || 'dub' };
 
             const hashMatch = hash.match(/#\\/?(\\d+)[\\/&](\\d+)(?:[\\/&](dub|sub))?/i);
@@ -1827,9 +1943,9 @@ const HTML = `<!DOCTYPE html>
 export default {
   async fetch(request, env, ctx) {
     try {
-      const url      = new URL(request.url);
+      const url = new URL(request.url);
       const pathname = url.pathname;
-      const method   = request.method;
+      const method = request.method;
 
       if (method === 'OPTIONS') {
         return new Response(null, { status: 204, headers: corsHeaders() });
@@ -1843,26 +1959,26 @@ export default {
       switch (pathname) {
         case '/':
         case '/index.html':
-        case '/play':        return handleHome(url);
-        case '/m3u8':        return handlePlaylist(request, url, ctx);
-        case '/segment':     return handleSegment(request, url, ctx);
-        case '/txt':         return handleTxt(request, url, ctx);
-        case '/proxy':       return handleProxy(request, url);
+        case '/play': return handleHome(url);
+        case '/m3u8': return handlePlaylist(request, url, ctx);
+        case '/segment': return handleSegment(request, url, ctx);
+        case '/txt': return handleTxt(request, url, ctx);
+        case '/proxy': return handleProxy(request, url);
         case '/api/merged':
-        case '/api/all':     return handleApiMerged(request, url, ctx);
+        case '/api/all': return handleApiMerged(request, url, ctx);
         case '/api/streams': return handleApiMegaPlay(request, url, ctx);
         case '/api/sources': return handleApiSources(request, url);
-        case '/api/cached':  return handleApiCached(request, url);
+        case '/api/cached': return handleApiCached(request, url);
         case '/api/anisnatch':
         case '/api/anisantch':
         case '/api/anisnacht': return handleApiAniSnatch(request, url);
         case '/api/flixcloud':
-        case '/api/flix':      return handleApiFlixCloud(request, url);
-        case '/api/animegg':   return handleApiAnimeGG(request, url);
+        case '/api/flix': return handleApiFlixCloud(request, url);
+        case '/api/animegg': return handleApiAnimeGG(request, url);
         case '/api/anidb':
-        case '/api/anidbapp':  return handleApiAniDB(request, url);
-        case '/api/health':    return handleApiHealth(request, url);
-        default:             return textResponse('Not found.', 404);
+        case '/api/anidbapp': return handleApiAniDB(request, url);
+        case '/api/health': return handleApiHealth(request, url);
+        default: return textResponse('Not found.', 404);
       }
     } catch (err) {
       return textResponse(`Worker error: ${err.message || err}`, 500);
@@ -1893,7 +2009,7 @@ async function lookupMegaPlayDatabase(malId, epNum, workerOrigin) {
   if (!data || typeof data !== 'object') return null;
 
   const mid = String(malId).trim();
-  const ep  = String(epNum).trim();
+  const ep = String(epNum).trim();
   const topLevel = data.entries ?? data;
   const animeObj = topLevel[mid];
   if (!animeObj || typeof animeObj !== 'object') return null;
@@ -1906,9 +2022,9 @@ async function lookupMegaPlayDatabase(malId, epNum, workerOrigin) {
     const m = key.match(keyRe);
     if (!m) continue;
 
-    const lang      = m[1].toLowerCase();
+    const lang = m[1].toLowerCase();
     const streamNum = parseInt(m[2], 10);
-    const isMaster  = rawUrl.toLowerCase().includes('master.m3u8');
+    const isMaster = rawUrl.toLowerCase().includes('master.m3u8');
 
     streams.push({
       provider: 'megaplay',
@@ -2111,8 +2227,8 @@ async function getMegaPlayAllStreams(malId, epNum, workerOrigin, requestedLang =
 
 async function handleApiMegaPlay(request, url, ctx) {
   const malId = url.searchParams.get('mal_id') || url.searchParams.get('id');
-  const ep    = url.searchParams.get('ep') || url.searchParams.get('episode');
-  const lang  = (url.searchParams.get('lang') || 'both').toLowerCase();
+  const ep = url.searchParams.get('ep') || url.searchParams.get('episode');
+  const lang = (url.searchParams.get('lang') || 'both').toLowerCase();
   if (!malId || !ep)
     return jsonResponse({ error: 'Missing mal_id and/or ep params' }, 400);
 
@@ -2138,7 +2254,7 @@ async function handleApiSources(request, url) {
 
 async function handleApiCached(request, url) {
   const malId = url.searchParams.get('mal_id') || url.searchParams.get('id');
-  const ep    = url.searchParams.get('ep') || url.searchParams.get('episode');
+  const ep = url.searchParams.get('ep') || url.searchParams.get('episode');
   if (!malId || !ep)
     return jsonResponse({ error: 'Missing mal_id and/or ep params' }, 400);
 
@@ -2181,15 +2297,15 @@ async function lookupAniSnatchStreams(malId, epNum, workerOrigin, requestedLang 
   if (!all || !all.length) return [];
 
   const mid = String(malId).trim();
-  const ep  = String(epNum).trim();
-  const langs = (requestedLang === 'both' || !requestedLang) ? ['dub', 'sub'] : [requestedLang.toLowerCase()];
+  const ep = String(epNum).trim();
+  const langs = (requestedLang === 'both' || !requestedLang) ? ['sub', 'dub'] : [requestedLang.toLowerCase()];
   const streams = [];
 
   for (const lang of langs) {
     const key = `${mid}/${ep}==${lang}`;
     const altKey = `${mid}/${ep}==${lang === 'dub' ? 'sub' : 'dub'}`;
     const entry = all.find(e => e.mal_id_with_ep_and_stream_type === key) ||
-                  (requestedLang === 'both' ? null : all.find(e => e.mal_id_with_ep_and_stream_type === altKey));
+      (requestedLang === 'both' ? null : all.find(e => e.mal_id_with_ep_and_stream_type === altKey));
 
     if (!entry) continue;
 
@@ -2262,8 +2378,8 @@ async function lookupAniSnatchStreams(malId, epNum, workerOrigin, requestedLang 
 
 async function handleApiAniSnatch(request, url) {
   const malId = url.searchParams.get('mal_id') || url.searchParams.get('id');
-  const ep    = url.searchParams.get('ep') || url.searchParams.get('episode');
-  const lang  = url.searchParams.get('lang') || 'both';
+  const ep = url.searchParams.get('ep') || url.searchParams.get('episode');
+  const lang = url.searchParams.get('lang') || 'both';
 
   if (!malId || !ep) {
     return jsonResponse({ error: 'Missing mal_id and/or ep params' }, 400);
@@ -2423,8 +2539,8 @@ async function lookupFlixCloudStreams(malId, epNum, requestedLang = 'both') {
 
 async function handleApiFlixCloud(request, url) {
   const malId = url.searchParams.get('mal_id') || url.searchParams.get('id');
-  const ep    = url.searchParams.get('ep') || url.searchParams.get('episode');
-  const lang  = url.searchParams.get('lang') || 'both';
+  const ep = url.searchParams.get('ep') || url.searchParams.get('episode');
+  const lang = url.searchParams.get('lang') || 'both';
 
   if (!malId || !ep) {
     return jsonResponse({ error: 'Missing mal_id and/or ep params' }, 400);
@@ -2553,8 +2669,8 @@ async function lookupAnimeGGStreams(malId, epNum, workerOrigin, requestedLang = 
 
 async function handleApiAnimeGG(request, url) {
   const malId = url.searchParams.get('mal_id') || url.searchParams.get('id');
-  const ep    = url.searchParams.get('ep') || url.searchParams.get('episode');
-  const lang  = url.searchParams.get('lang') || 'both';
+  const ep = url.searchParams.get('ep') || url.searchParams.get('episode');
+  const lang = url.searchParams.get('lang') || 'both';
 
   if (!malId || !ep) {
     return jsonResponse({ error: 'Missing mal_id and/or ep params' }, 400);
@@ -2581,7 +2697,7 @@ async function handleApiAnimeGG(request, url) {
 
 const WORKER_PROXY_FALLBACK = 'https://old-sun-d12a.andruilsyestems.workers.dev';
 const _anidbSeriesCache = new Map();
-const _anidbMediaCache  = new Map();
+const _anidbMediaCache = new Map();
 
 async function anidbFetch(targetUrl, referer = `${ANIDB_BASE}/`, isXhr = false) {
   try {
@@ -2596,14 +2712,14 @@ async function anidbFetch(targetUrl, referer = `${ANIDB_BASE}/`, isXhr = false) 
       cf: { cacheTtl: 3600, cacheEverything: true }
     });
     if (res.ok) return await res.text();
-  } catch (_) {}
+  } catch (_) { }
 
   // Fallback to proxy worker if blocked outside CF edge
   try {
     const proxyEndpoint = `${WORKER_PROXY_FALLBACK}/?url=${encodeURIComponent(targetUrl)}&ref=${encodeURIComponent(referer)}${isXhr ? '&xhr=1' : ''}`;
     const pRes = await fetch(proxyEndpoint);
     if (pRes.ok) return await pRes.text();
-  } catch (_) {}
+  } catch (_) { }
 
   return '';
 }
@@ -2672,7 +2788,7 @@ async function resolveAnimeMeta(identifier) {
           }
         }
       }
-    } catch (_) {}
+    } catch (_) { }
 
     // 2. Check ani.zip mapping by anilist_id
     if (!meta.titles.size) {
@@ -2692,7 +2808,7 @@ async function resolveAnimeMeta(identifier) {
             }
           }
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     // 3. Fallback to Jikan MAL API
@@ -2712,7 +2828,7 @@ async function resolveAnimeMeta(identifier) {
             d.titles.forEach(t => t.title && meta.titles.add(t.title));
           }
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     // 4. Try AniList GraphQL
@@ -2745,7 +2861,7 @@ async function resolveAnimeMeta(identifier) {
           buildAniDBTitles(media).forEach(t => meta.titles.add(t));
         }
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   return meta;
@@ -2769,7 +2885,7 @@ async function getAniListMedia(anilistId, malId = null) {
       if (media && aid) _anidbMediaCache.set(aid, media);
       return media;
     }
-  } catch (_) {}
+  } catch (_) { }
   return null;
 }
 
@@ -2850,7 +2966,7 @@ async function resolveAniDBSeries(meta) {
       for (const r of res) {
         if (!candidates.has(r.slug)) candidates.set(r.slug, r);
       }
-    } catch (_) {}
+    } catch (_) { }
   }));
 
   for (const candidate of candidates.values()) {
@@ -2950,8 +3066,8 @@ async function lookupAniDBStreams(identifier, epNum, workerOrigin, requestedLang
   for (const aud of audiosToFetch) {
     const preferred = aud === 'sub' ? ['jpn', 'ja', 'japanese'] : ['eng', 'en', 'english'];
     const language = languages.find(l => preferred.includes(String(l.code ?? '').toLowerCase()))
-                  || languages.find(l => preferred.includes(String(l.name ?? '').toLowerCase()))
-                  || null;
+      || languages.find(l => preferred.includes(String(l.name ?? '').toLowerCase()))
+      || null;
 
     if (!language || !language.embed_url) continue;
 
@@ -2965,7 +3081,7 @@ async function lookupAniDBStreams(identifier, epNum, workerOrigin, requestedLang
       if (html) {
         hlsUrl = extractAniDBHls(html);
       }
-    } catch (_) {}
+    } catch (_) { }
 
     if (hlsUrl) {
       streams.push({
@@ -2998,8 +3114,8 @@ async function lookupAniDBStreams(identifier, epNum, workerOrigin, requestedLang
 
 async function handleApiAniDB(request, url) {
   const malId = url.searchParams.get('mal_id') || url.searchParams.get('id') || url.searchParams.get('anilist_id') || url.searchParams.get('q');
-  const ep    = url.searchParams.get('ep') || url.searchParams.get('episode') || '1';
-  const lang  = url.searchParams.get('lang') || 'both';
+  const ep = url.searchParams.get('ep') || url.searchParams.get('episode') || '1';
+  const lang = url.searchParams.get('lang') || 'both';
 
   if (!malId) {
     return jsonResponse({ error: 'Missing mal_id and/or ep params' }, 400);
@@ -3025,10 +3141,10 @@ async function handleApiAniDB(request, url) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function handleApiMerged(request, url, ctx) {
-  const malId    = url.searchParams.get('mal_id') || url.searchParams.get('id');
-  const ep       = url.searchParams.get('ep') || url.searchParams.get('episode');
+  const malId = url.searchParams.get('mal_id') || url.searchParams.get('id');
+  const ep = url.searchParams.get('ep') || url.searchParams.get('episode');
   const provider = (url.searchParams.get('provider') || 'all').toLowerCase();
-  const lang     = (url.searchParams.get('lang') || 'both').toLowerCase();
+  const lang = (url.searchParams.get('lang') || 'both').toLowerCase();
 
   if (!malId || !ep) {
     return jsonResponse({ error: 'Missing mal_id and/or ep query params' }, 400);
@@ -3042,19 +3158,19 @@ async function handleApiMerged(request, url, ctx) {
 
   const tasks = [];
   if (provider === 'all' || provider === 'megaplay') {
-    tasks.push(getMegaPlayAllStreams(malId, ep, url.origin, lang).then(res => { megaplayList = res; }).catch(() => {}));
+    tasks.push(getMegaPlayAllStreams(malId, ep, url.origin, lang).then(res => { megaplayList = res; }).catch(() => { }));
   }
   if (provider === 'all' || provider === 'flixcloud') {
-    tasks.push(lookupFlixCloudStreams(malId, ep, lang).then(res => { flixList = res; }).catch(() => {}));
+    tasks.push(lookupFlixCloudStreams(malId, ep, lang).then(res => { flixList = res; }).catch(() => { }));
   }
   if (provider === 'all' || provider === 'anisnatch') {
-    tasks.push(lookupAniSnatchStreams(malId, ep, url.origin, lang).then(res => { anisnatchList = res; }).catch(() => {}));
+    tasks.push(lookupAniSnatchStreams(malId, ep, url.origin, lang).then(res => { anisnatchList = res; }).catch(() => { }));
   }
   if (provider === 'all' || provider === 'animegg') {
-    tasks.push(lookupAnimeGGStreams(malId, ep, url.origin, lang).then(res => { animeggList = res; }).catch(() => {}));
+    tasks.push(lookupAnimeGGStreams(malId, ep, url.origin, lang).then(res => { animeggList = res; }).catch(() => { }));
   }
   if (provider === 'all' || provider === 'anidb') {
-    tasks.push(lookupAniDBStreams(malId, ep, url.origin, lang).then(res => { anidbList = res; }).catch(() => {}));
+    tasks.push(lookupAniDBStreams(malId, ep, url.origin, lang).then(res => { anidbList = res; }).catch(() => { }));
   }
 
   await Promise.all(tasks);
@@ -3147,7 +3263,7 @@ async function handlePlaylist(request, url, ctx) {
       const age = Date.now() - Number(hit.headers.get('X-Cached-At') || 0);
       if (age < PLAYLIST_SWR_WINDOW * 1000) {
         if (age > PLAYLIST_CACHE_TTL * 1000 && ctx?.waitUntil)
-          ctx.waitUntil(refreshPlaylist(target, url.origin, upstreamHeaders, passthrough, swrKey, cache, ctx).catch(() => {}));
+          ctx.waitUntil(refreshPlaylist(target, url.origin, upstreamHeaders, passthrough, swrKey, cache, ctx).catch(() => { }));
         const h = new Headers(hit.headers); applyCors(h); h.set('X-Cache-Status', 'HIT-SWR');
         return new Response(hit.body, { status: 200, headers: h });
       }
@@ -3344,7 +3460,7 @@ async function prefetchSegments(urls, upstreamHeaders) {
 
 async function handleProxy(request, parsedUrl) {
   const targetRaw = parsedUrl.searchParams.get('url');
-  let referer     = parsedUrl.searchParams.get('referer') || parsedUrl.searchParams.get('ref');
+  let referer = parsedUrl.searchParams.get('referer') || parsedUrl.searchParams.get('ref');
 
   if (!targetRaw) return jsonError(400, 'Missing ?url= parameter');
 
@@ -3386,23 +3502,23 @@ async function handleProxy(request, parsedUrl) {
   }
 
   return new Response(upstream.body, {
-    status:  upstream.status,
+    status: upstream.status,
     headers: resHeaders,
   });
 }
 
 function buildBrowserHeaders(originalRequest, referer) {
   let origin = ANIMEGG_REFERER;
-  try { origin = new URL(referer).origin; } catch {}
+  try { origin = new URL(referer).origin; } catch { }
 
   return new Headers({
     'User-Agent': DEFAULT_UA,
-    'Referer':    referer,
-    'Origin':     origin,
-    'Accept':     originalRequest.headers.get('Accept') || '*/*',
+    'Referer': referer,
+    'Origin': origin,
+    'Accept': originalRequest.headers.get('Accept') || '*/*',
     'Accept-Language': 'en-US,en;q=0.9',
-    'Cache-Control':   'no-cache',
-    'Pragma':          'no-cache',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
   });
 }
 
