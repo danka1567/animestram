@@ -1,9 +1,0 @@
-Streamtape API Info:
-API Login: 59484016637a23331603
-API Key: lgWOyYK90XC7xLd
-Account Email: narutoanimeinspirationquote@gmail.com
-Base URL: https://api.streamtape.com
-Account Info Endpoint: https://api.streamtape.com/account/info?login=59484016637a23331603&key=lgWOyYK90XC7xLd
-Upload Server Endpoint: https://api.streamtape.com/file/ul?login=59484016637a23331603&key=lgWOyYK90XC7xLd
-Remote Upload Endpoint: https://api.streamtape.com/remotedl/add?login=59484016637a23331603&key=lgWOyYK90XC7xLd
-Status: Active / 200 OK
